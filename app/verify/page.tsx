@@ -11,12 +11,8 @@ export default function Verify() {
           {/* Logo */}
           <Image src="/images/logo-aa.png" alt="Aadinath Industries" width={64} height={64} className="mb-4" />
 
-          {/* Green checkmark */}
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 6L9 17l-5-5" />
-            </svg>
-          </div>
+          {/* Verified Badge */}
+          <Image src="/images/verified-badge.png" alt="Verified" width={72} height={72} className="mb-4" />
 
           {/* Verified Text */}
           <h1 className="text-2xl font-bold text-gray-800">Verified Steel Product</h1>
@@ -28,7 +24,7 @@ export default function Verify() {
             This product has been <strong>digitally verified</strong> by the manufacturer.
           </p>
           <p className="text-gray-600 mt-2">
-            You are viewing a verified <strong>MS Angle</strong> manufactured by Aadinath Industries.
+            You are viewing a verified <strong>MS Angle Bar</strong> manufactured by Aadinath Industries.
           </p>
 
           <div className="w-16 h-0.5 bg-gray-200 my-5" />
@@ -38,7 +34,7 @@ export default function Verify() {
             <p className="text-sm font-semibold text-gray-700 mb-3 text-left">Each product is produced under controlled rolling conditions to ensure:</p>
             <ul className="flex flex-col gap-2">
               {[
-                'Accurate dimensions',
+                'Accurate dimensions & weight',
                 'Controlled weight tolerance',
                 'Straightness and surface quality',
               ].map((item) => (

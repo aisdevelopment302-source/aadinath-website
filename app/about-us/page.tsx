@@ -27,7 +27,7 @@ export default function AboutUs() {
           </div>
           <div>
             <p className="text-gray-600 leading-relaxed">
-              Each product from our extensive range is crafted to perfection. Our range includes MS Angles, Round Bars, Square Bars, Flat Bars, and Bright Bars, all meeting the highest standards of excellence.
+              Our MS Angle Bars are crafted to perfection — precision-rolled from quality recycled plates, meeting the highest standards of dimensional accuracy and structural integrity.
             </p>
             <p className="text-gray-600 leading-relaxed mt-4">
               We cherish the relationships we build, treating our customers and suppliers as partners in progress, with honesty and transparency at the core of every interaction.

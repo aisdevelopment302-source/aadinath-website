@@ -4,12 +4,12 @@ import Link from 'next/link'
 const features = [
   {
     title: 'Quality',
-    desc: 'Each product crafted to perfection, meeting the highest standards of excellence in every element.',
+    desc: 'Each angle bar is rolled to perfection, meeting the highest standards of dimensional accuracy and consistency.',
     icon: '🏆',
   },
   {
     title: 'Innovation',
-    desc: '"Always Ahead" isn\'t just our slogan — it\'s our way of life. We constantly innovate and improve.',
+    desc: '"Always Ahead" isn\'t just our slogan — it\'s our way of life. We constantly innovate and improve our processes.',
     icon: '💡',
   },
   {
@@ -17,13 +17,6 @@ const features = [
     desc: 'We treat customers and suppliers as partners in progress, with honesty and transparency at the core.',
     icon: '🤝',
   },
-]
-
-const productPreview = [
-  { name: 'MS Angle Bar', range: '20mm – 110mm', color: 'bg-orange-50 border-orange-200' },
-  { name: 'MS Flat Bar', range: '20×5 – 100×50mm', color: 'bg-amber-50 border-amber-200' },
-  { name: 'MS Round Bar', range: '8mm – 100mm', color: 'bg-yellow-50 border-yellow-200' },
-  { name: 'Bright Flat Bar', range: '16×5 – 100×50mm', color: 'bg-orange-50 border-orange-200' },
 ]
 
 export default function Home() {
@@ -45,14 +38,14 @@ export default function Home() {
             <span className="text-orange-400">in Every Element</span>
           </h1>
           <p className="mt-4 text-lg md:text-xl text-gray-200 max-w-xl">
-            Crafted with Care, Delivered with Pride. A trusted name in the metals industry.
+            Crafted with Care, Delivered with Pride. Precision MS Angle Bars from Bhavnagar.
           </p>
           <div className="mt-6 flex gap-4 flex-wrap">
             <Link
               href="/products"
               className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
             >
-              Explore Products
+              Our Product
             </Link>
             <Link
               href="/contact-us"
@@ -77,27 +70,31 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Product Preview */}
+      {/* Product Spotlight */}
       <section className="bg-gray-50 py-16">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-800">Customized Solutions for Every Industry</h2>
-            <p className="text-gray-500 mt-2 max-w-2xl mx-auto">
-              Our extensive range of metal products is engineered to meet diverse industrial needs, with flexibility to adjust specifications.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {productPreview.map((p) => (
-              <div key={p.name} className={`border ${p.color} rounded-xl p-5 text-center`}>
-                <h4 className="font-bold text-gray-800">{p.name}</h4>
-                <p className="text-sm text-gray-500 mt-1">Size Range: {p.range}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-orange-600" />
+                <span className="text-sm font-semibold text-orange-600 uppercase tracking-wider">Our Product</span>
               </div>
-            ))}
-          </div>
-          <div className="text-center mt-8">
-            <Link href="/products" className="text-orange-600 hover:text-orange-700 font-semibold underline">
-              View All Products →
-            </Link>
+              <h2 className="text-3xl font-bold text-gray-800 mb-3">MS Angle Bar</h2>
+              <p className="text-gray-600 leading-relaxed">
+                Precision-rolled mild steel angles from 20mm to 37mm — the structural backbone for construction, fabrication, and industrial applications. Manufactured from quality recycled plates at our Bhavnagar works.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {['20×2.5', '25×3.0', '30×3.0', '32×3.0', '35×3.0', '37×3.0'].map((s) => (
+                  <span key={s} className="text-xs bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-medium">{s} mm</span>
+                ))}
+              </div>
+              <Link href="/products" className="mt-6 inline-block text-orange-600 hover:text-orange-700 font-semibold underline">
+                View Details →
+              </Link>
+            </div>
+            <div className="rounded-2xl overflow-hidden shadow-lg">
+              <Image src="/images/ms-angles.png" alt="MS Angle Bars" width={560} height={460} className="object-cover w-full" />
+            </div>
           </div>
         </div>
       </section>
@@ -105,6 +102,9 @@ export default function Home() {
       {/* About Snippet */}
       <section className="max-w-6xl mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div className="rounded-2xl overflow-hidden shadow-lg">
+            <Image src="/images/worker-rolls.jpg" alt="Worker at rolling mill" width={560} height={420} className="object-cover w-full" />
+          </div>
           <div>
             <h2 className="text-3xl font-bold text-gray-800 mb-4">
               Welcome to <span className="text-orange-600">Aadinath Industries</span>
@@ -118,9 +118,6 @@ export default function Home() {
             <Link href="/about-us" className="mt-6 inline-block text-orange-600 hover:text-orange-700 font-semibold underline">
               Learn More →
             </Link>
-          </div>
-          <div className="rounded-2xl overflow-hidden shadow-lg">
-            <Image src="/images/worker-rolls.jpg" alt="Worker at rolling mill" width={560} height={420} className="object-cover w-full" />
           </div>
         </div>
       </section>

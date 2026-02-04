@@ -1,13 +1,13 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
-const products = [
-  { name: 'MS Angle Bar', range: '20mm – 110mm', desc: 'Robust angles perfect for a variety of structural needs in construction and industrial applications.', category: 'MS' },
-  { name: 'MS Flat Bar', range: '20×5mm – 100×50mm, 125×6mm – 150×25mm', desc: 'Versatile flat bars for applications demanding flat surfaces with high strength and durability.', category: 'MS' },
-  { name: 'MS Round Bar', range: '8mm – 100mm', desc: 'Durable round bars ideal for construction, manufacturing, and engineering applications.', category: 'MS' },
-  { name: 'MS Square Bar', range: '8mm – 75mm', desc: 'Sturdy square bars offering reliability for general fabrication and repairs across industries.', category: 'MS' },
-  { name: 'Bright Flat Bar', range: '16×5mm – 100×50mm, 125×10mm – 150×25mm', desc: 'Premium flat bars providing a clean finish for detailed work and precision applications.', category: 'Bright' },
-  { name: 'Bright Round Bar', range: '8mm – 100mm', desc: 'High-quality round bars offering a combination of toughness and superior finish.', category: 'Bright' },
-  { name: 'Bright Square Bar', range: '8mm – 75mm', desc: 'Precision-engineered square bars known for their excellent finish and reliable strength.', category: 'Bright' },
+const sizes = [
+  { size: '20 × 20 × 2.5 mm' },
+  { size: '25 × 25 × 3.0 mm' },
+  { size: '30 × 30 × 3.0 mm' },
+  { size: '32 × 32 × 3.0 mm' },
+  { size: '35 × 35 × 3.0 mm' },
+  { size: '37 × 37 × 3.0 mm' },
 ]
 
 export default function Products() {
@@ -18,52 +18,68 @@ export default function Products() {
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-white">Our Products</h1>
           <p className="text-gray-300 mt-3 max-w-2xl mx-auto">
-            From robust angle bars to precision-engineered bright bars, discover our diverse selection of metal products tailored to meet your specific industrial needs.
+            Precision-rolled mild steel angles crafted from quality recycled plates. Built for structural strength, delivered with pride.
           </p>
         </div>
       </section>
 
-      {/* Product Grid */}
+      {/* Product Detail */}
       <section className="max-w-6xl mx-auto px-4 py-16">
-        {/* MS Products */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-            <span className="inline-block w-3 h-3 rounded-full bg-orange-600" />
-            Mild Steel (MS) Products
-          </h2>
-          <p className="text-gray-500 mb-6">Our core manufacturing range</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.filter(p => p.category === 'MS').map((p) => (
-              <div key={p.name} className="border border-gray-200 rounded-xl p-6 hover:shadow-md hover:border-orange-300 transition-all bg-white">
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="text-lg font-bold text-gray-800">{p.name}</h3>
-                  <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-medium">MS</span>
-                </div>
-                <p className="text-sm text-orange-600 font-medium mb-2">Size Range: {p.range}</p>
-                <p className="text-gray-500 text-sm leading-relaxed">{p.desc}</p>
-              </div>
-            ))}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+          {/* Product Image */}
+          <div className="rounded-2xl overflow-hidden shadow-lg">
+            <Image
+              src="/images/ms-angles.png"
+              alt="MS Angle Bars"
+              width={600}
+              height={500}
+              className="object-cover w-full"
+            />
           </div>
-        </div>
 
-        {/* Bright Products */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-            <span className="inline-block w-3 h-3 rounded-full bg-amber-500" />
-            Bright Finish Products
-          </h2>
-          <p className="text-gray-500 mb-6">Premium finish range for precision applications</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.filter(p => p.category === 'Bright').map((p) => (
-              <div key={p.name} className="border border-gray-200 rounded-xl p-6 hover:shadow-md hover:border-amber-300 transition-all bg-white">
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="text-lg font-bold text-gray-800">{p.name}</h3>
-                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">Bright</span>
-                </div>
-                <p className="text-sm text-amber-600 font-medium mb-2">Size Range: {p.range}</p>
-                <p className="text-gray-500 text-sm leading-relaxed">{p.desc}</p>
+          {/* Product Info */}
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="inline-block w-3 h-3 rounded-full bg-orange-600" />
+              <span className="text-sm font-semibold text-orange-600 uppercase tracking-wider">Mild Steel</span>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-800 mb-3">MS Angle Bar</h2>
+            <p className="text-gray-600 leading-relaxed">
+              Robust, precision-rolled mild steel angles — the backbone of structural construction. Our angles are manufactured from quality recycled plates, rolled to exact specifications at our Bhavnagar works.
+            </p>
+            <p className="text-gray-600 leading-relaxed mt-3">
+              Each piece undergoes controlled rolling to ensure consistent dimensions, weight tolerance, and straightness across the entire length.
+            </p>
+
+            {/* Size Range */}
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Available Sizes</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {sizes.map((s) => (
+                  <div key={s.size} className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 text-center">
+                    <span className="text-sm font-medium text-gray-700">{s.size}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+              <p className="text-xs text-gray-400 mt-3">Custom lengths available on request</p>
+            </div>
+
+            {/* Applications */}
+            <div className="mt-6 bg-gray-50 rounded-xl p-5">
+              <h3 className="font-semibold text-gray-800 mb-2">Applications</h3>
+              <ul className="flex flex-col gap-1.5">
+                {[
+                  'Structural framing & support beams',
+                  'Construction scaffolding',
+                  'Fabrication & manufacturing',
+                  'General industrial use',
+                ].map((app) => (
+                  <li key={app} className="text-sm text-gray-600 flex items-center gap-2">
+                    <span className="text-orange-500">▸</span> {app}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </section>
@@ -71,8 +87,8 @@ export default function Products() {
       {/* CTA */}
       <section className="bg-orange-50 py-14">
         <div className="max-w-3xl mx-auto px-4 text-center">
-          <h2 className="text-2xl font-bold text-gray-800">Connect with Aadinath Industries</h2>
-          <p className="text-gray-500 mt-2">Experience the strength and precision of our metal products firsthand. Your projects deserve the best.</p>
+          <h2 className="text-2xl font-bold text-gray-800">Ready to order?</h2>
+          <p className="text-gray-500 mt-2">Get in touch for bulk pricing, custom lengths, or a product sample.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             <a href="tel:+919825207616" className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
               📞 +91 9825207616
