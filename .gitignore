@@ -1,3 +1,66 @@
+# Dependencies
 node_modules/
-.next/
+/.pnp
+.pnp.js
 
+# Next.js
+/.next/
+/out/
+/build/
+
+# Production build
+.next
+dist/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+.env*.local
+
+# Testing
+.nyc_output/
+coverage/
+*.lcov
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Package managers
+pnpm-lock.yaml
+yarn.lock
+
+# Python (for serve_static.py)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+.venv
+
+# Miscellaneous
+.cache/
+.turbo/
