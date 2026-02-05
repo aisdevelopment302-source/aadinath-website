@@ -2,10 +2,5 @@
   "buildCommand": "pnpm install && pnpm build",
   "installCommand": "pnpm install",
   "framework": "nextjs",
-  "regions": ["iad1"],
-  "env": {
-    "NODE_ENV": {
-      "value": "production"
-    }
-  }
+  "regions": ["iad1"]
 }
