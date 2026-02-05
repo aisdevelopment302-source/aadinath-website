@@ -83,10 +83,16 @@ export default function Home() {
               <p className="text-gray-600 leading-relaxed">
                 Precision-rolled mild steel angles — available in both light and standard variants from 20mm to 37mm. The structural backbone for construction, fabrication, and industrial applications. Engineered with precision at our state-of-the-art Sihor facility.
               </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {['20×2.5', '24×2', '25×2.5', '25×3', '25×4', '25×5', '30×2.5', '30×3', '34×4', '37×2.5', '37×3'].map((s) => (
-                  <span key={s} className="text-xs bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-medium">{s} mm</span>
-                ))}
+              <div className="mt-5">
+                <p className="text-sm text-gray-500 font-semibold mb-3">Standard Sizes:</p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {['20×2.5', '24×2', '25×2.5', '25×3', '25×4', '25×5', '30×2.5', '30×3', '34×4', '37×2.5', '37×3'].map((s) => (
+                    <span key={s} className="text-xs bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-medium">{s} mm</span>
+                  ))}
+                </div>
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+                  <p className="text-sm text-yellow-800"><span className="font-semibold">✓ Customizable</span> — We welcome custom specifications for dimensions, weight, and length tailored to your exact requirements.</p>
+                </div>
               </div>
               <Link href="/products" className="mt-6 inline-block text-orange-600 hover:text-orange-700 font-semibold underline">
                 View Details →

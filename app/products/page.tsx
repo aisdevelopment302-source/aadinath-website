@@ -59,14 +59,24 @@ export default function Products() {
             {/* Size Range */}
             <div className="mt-8">
               <h3 className="text-lg font-semibold text-gray-800 mb-3">Available Sizes</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
                 {sizes.map((s) => (
                   <div key={s.size} className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 text-center">
                     <span className="text-sm font-medium text-gray-700">{s.size}</span>
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-400 mt-3">Custom lengths available on request</p>
+              
+              {/* Customization Highlight */}
+              <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                <h4 className="font-semibold text-green-900 mb-2">🎯 Custom Specifications Welcome</h4>
+                <p className="text-sm text-green-800 mb-2">We offer full control over your requirements:</p>
+                <ul className="text-sm text-green-800 space-y-1 ml-2">
+                  <li>✓ <span className="font-medium">Custom Dimensions</span> — width & thickness tailored to your needs</li>
+                  <li>✓ <span className="font-medium">Custom Weight</span> — precision control within tight tolerances</li>
+                  <li>✓ <span className="font-medium">Custom Length</span> — any length requirement, no standard limitations</li>
+                </ul>
+              </div>
             </div>
 
             {/* Applications */}
