@@ -38,7 +38,7 @@ export default function Home() {
             <span className="text-orange-400">in Every Element</span>
           </h1>
           <p className="mt-4 text-lg md:text-xl text-gray-200 max-w-xl">
-            Crafted with Care, Delivered with Pride. Precision MS Angle Bars from Sihor.
+            Crafted with Care, Delivered with Pride. Precision MS Angle Bars from Bhavnagar, Gujarat.
           </p>
           <div className="mt-6 flex gap-4 flex-wrap">
             <Link
