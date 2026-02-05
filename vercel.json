@@ -2,7 +2,6 @@
   "buildCommand": "pnpm install && pnpm build",
   "installCommand": "pnpm install",
   "framework": "nextjs",
-  "nodeVersion": "22.x",
   "regions": ["iad1"],
   "env": {
     "NODE_ENV": {
