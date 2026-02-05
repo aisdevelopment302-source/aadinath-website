@@ -81,7 +81,7 @@ export default function Home() {
               </div>
               <h2 className="text-3xl font-bold text-gray-800 mb-3">MS Angle Bar</h2>
               <p className="text-gray-600 leading-relaxed">
-                Precision-rolled mild steel angles from 20mm to 37mm — the structural backbone for construction, fabrication, and industrial applications. Manufactured from quality recycled plates at our Bhavnagar works.
+                Precision-rolled mild steel angles — available in both light and standard variants from 20mm to 37mm. The structural backbone for construction, fabrication, and industrial applications. Manufactured from quality recycled plates at our Bhavnagar works.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {['20×2.5', '25×3.0', '30×3.0', '32×3.0', '35×3.0', '37×3.0'].map((s) => (
