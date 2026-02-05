@@ -78,7 +78,7 @@ export default function CustomerDataForm({ batchId, onSuccess }: CustomerDataFor
           onClick={() => setIsOpen(true)}
           className="w-full bg-orange-100 hover:bg-orange-200 text-orange-700 px-4 py-3 rounded-lg font-semibold text-sm transition-colors"
         >
-          📋 Help Us Serve You Better
+          📝 Fill a Quick Form - Get In Touch With Us
         </button>
       ) : (
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-5">

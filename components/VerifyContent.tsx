@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import CustomerDataForm from '@/components/CustomerDataForm'
-import { trackVerificationScan, getUserLocationFromIP } from '@/lib/analytics'
 
 export default function VerifyContent() {
   const searchParams = useSearchParams()
@@ -12,23 +11,9 @@ export default function VerifyContent() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const trackScan = async () => {
-      try {
-        // Get user location
-        const location = await getUserLocationFromIP()
-        const locationStr = location.city ? `${location.city}, ${location.state}, ${location.country}` : 'Unknown'
-
-        // Track the verification scan
-        await trackVerificationScan(batchId, locationStr)
-      } catch (error) {
-        console.error('Error tracking verification scan:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    trackScan()
-  }, [batchId])
+    // Verification page loaded - batch tracking disabled for now
+    setIsLoading(false)
+  }, [])
 
   return (
     <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
@@ -55,13 +40,6 @@ export default function VerifyContent() {
           <p className="text-gray-600 mt-2">
             You are viewing a verified <strong>MS Angle Bar</strong> manufactured by Aadinath Industries.
           </p>
-
-          {/* Batch ID Display */}
-          {batchId !== 'UNKNOWN' && (
-            <p className="text-xs text-gray-500 mt-2 bg-gray-100 px-2 py-1 rounded">
-              Batch: <span className="font-mono font-semibold">{batchId}</span>
-            </p>
-          )}
 
           <div className="w-16 h-0.5 bg-gray-200 my-5" />
 
