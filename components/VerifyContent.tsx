@@ -1,8 +1,11 @@
-'use client'
+"use client"
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { getUserLocationFromIP } from '@/lib/analytics'
 import CustomerDataForm from '@/components/CustomerDataForm'
 
 export default function VerifyContent() {
@@ -11,8 +14,42 @@ export default function VerifyContent() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Verification page loaded - batch tracking disabled for now
     setIsLoading(false)
+
+    const source = searchParams.get('source') || 'UNKNOWN'
+    const product = searchParams.get('product') || 'UNKNOWN'
+
+    const trackScanEvent = async () => {
+      try {
+        const { city = 'UNKNOWN', state = 'UNKNOWN', country = 'UNKNOWN' } =
+          (await getUserLocationFromIP()) || {}
+
+        const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : ''
+        const isMobile = /Mobile|Android|iPhone/i.test(userAgent)
+        const deviceType = isMobile ? 'mobile' : 'desktop'
+        const referrer = typeof document !== 'undefined' ? document.referrer : ''
+
+        const scanEventsRef = collection(db, 'scan_events')
+
+        await addDoc(scanEventsRef, {
+          source,
+          product,
+          city,
+          state,
+          country,
+          deviceType,
+          userAgent,
+          referrer,
+          timestamp: serverTimestamp(),
+        })
+      } catch (error) {
+        // Swallow errors to keep tracking silent for the user
+        console.error('Failed to log scan event', error)
+      }
+    }
+
+    // Fire and forget tracking; do not block rendering
+    trackScanEvent()
   }, [])
 
   return (
