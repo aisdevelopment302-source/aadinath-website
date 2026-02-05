@@ -50,7 +50,7 @@ export default function Products() {
             </div>
             <h2 className="text-3xl font-bold text-gray-800 mb-3">MS Angle Bar</h2>
             <p className="text-gray-600 leading-relaxed">
-              Robust, precision-rolled mild steel angles — available in both light and standard variants. The backbone of structural construction, engineered and rolled to exact specifications at our state-of-the-art Bhavnagar facility.
+              Robust, precision-rolled mild steel angles — available in both light and standard variants. The backbone of structural construction, engineered and rolled to exact specifications at our state-of-the-art Sihor facility.
             </p>
             <p className="text-gray-600 leading-relaxed mt-3">
               Each piece undergoes controlled rolling to ensure consistent dimensions, weight tolerance, and straightness across the entire length.

@@ -80,10 +80,10 @@ export default function ContactUs() {
               </a>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-              <h3 className="font-bold text-blue-700 mb-2">📍 Find Us</h3>
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
+              <h3 className="font-bold text-purple-700 mb-2">✅ Quality Assurance</h3>
               <p className="text-gray-600 text-sm">
-                Located in Bhavnagar, Gujarat — close to the Alang ship-breaking yard, ensuring efficient raw material sourcing and logistics.
+                All products are precision-engineered to meet strict dimensional tolerances, weight standards, and straightness requirements. Each batch undergoes rigorous quality checks at our state-of-the-art facility in Sihor.
               </p>
             </div>
           </div>

@@ -26,7 +26,6 @@ export default function Footer() {
                 { label: 'Products', href: '/products' },
                 { label: 'About Us', href: '/about-us' },
                 { label: 'Contact Us', href: '/contact-us' },
-                { label: 'Product Verify', href: '/verify' },
               ].map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-sm hover:text-orange-400 transition-colors">

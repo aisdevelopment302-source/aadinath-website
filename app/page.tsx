@@ -38,7 +38,7 @@ export default function Home() {
             <span className="text-orange-400">in Every Element</span>
           </h1>
           <p className="mt-4 text-lg md:text-xl text-gray-200 max-w-xl">
-            Crafted with Care, Delivered with Pride. Precision MS Angle Bars from Bhavnagar.
+            Crafted with Care, Delivered with Pride. Precision MS Angle Bars from Sihor.
           </p>
           <div className="mt-6 flex gap-4 flex-wrap">
             <Link
@@ -81,7 +81,7 @@ export default function Home() {
               </div>
               <h2 className="text-3xl font-bold text-gray-800 mb-3">MS Angle Bar</h2>
               <p className="text-gray-600 leading-relaxed">
-                Precision-rolled mild steel angles — available in both light and standard variants from 20mm to 37mm. The structural backbone for construction, fabrication, and industrial applications. Engineered with precision at our state-of-the-art Bhavnagar facility.
+                Precision-rolled mild steel angles — available in both light and standard variants from 20mm to 37mm. The structural backbone for construction, fabrication, and industrial applications. Engineered with precision at our state-of-the-art Sihor facility.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {['20×2.5', '24×2', '25×2.5', '25×3', '25×4', '25×5', '30×2.5', '30×3', '34×4', '37×2.5', '37×3'].map((s) => (
