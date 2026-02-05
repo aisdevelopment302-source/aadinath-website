@@ -1,6 +1,35 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
+import CustomerDataForm from '@/components/CustomerDataForm'
+import { trackVerificationScan, getUserLocationFromIP } from '@/lib/analytics'
 
 export default function Verify() {
+  const searchParams = useSearchParams()
+  const batchId = searchParams.get('batch') || 'UNKNOWN'
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const trackScan = async () => {
+      try {
+        // Get user location
+        const location = await getUserLocationFromIP()
+        const locationStr = location.city ? `${location.city}, ${location.state}, ${location.country}` : 'Unknown'
+
+        // Track the verification scan
+        await trackVerificationScan(batchId, locationStr)
+      } catch (error) {
+        console.error('Error tracking verification scan:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    trackScan()
+  }, [batchId])
+
   return (
     <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden">
@@ -26,6 +55,13 @@ export default function Verify() {
           <p className="text-gray-600 mt-2">
             You are viewing a verified <strong>MS Angle Bar</strong> manufactured by Aadinath Industries.
           </p>
+
+          {/* Batch ID Display */}
+          {batchId !== 'UNKNOWN' && (
+            <p className="text-xs text-gray-500 mt-2 bg-gray-100 px-2 py-1 rounded">
+              Batch: <span className="font-mono font-semibold">{batchId}</span>
+            </p>
+          )}
 
           <div className="w-16 h-0.5 bg-gray-200 my-5" />
 
@@ -68,6 +104,11 @@ export default function Verify() {
               <span className="font-semibold">🌐</span>{' '}
               <a href="https://aadinathindustries.in" className="text-orange-600 hover:underline" target="_blank" rel="noopener noreferrer">aadinathindustries.in</a>
             </p>
+          </div>
+
+          {/* Customer Data Form */}
+          <div className="w-full mb-6">
+            <CustomerDataForm batchId={batchId} />
           </div>
 
           {/* Feedback CTA */}
