@@ -2,12 +2,17 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 const sizes = [
-  { size: '20 × 20 × 2.5 mm' },
-  { size: '25 × 25 × 3.0 mm' },
-  { size: '30 × 30 × 3.0 mm' },
-  { size: '32 × 32 × 3.0 mm' },
-  { size: '35 × 35 × 3.0 mm' },
-  { size: '37 × 37 × 3.0 mm' },
+  { size: '20 × 2.5 mm' },
+  { size: '24 × 2.0 mm' },
+  { size: '25 × 2.5 mm' },
+  { size: '25 × 3.0 mm' },
+  { size: '25 × 4.0 mm' },
+  { size: '25 × 5.0 mm' },
+  { size: '30 × 2.5 mm' },
+  { size: '30 × 3.0 mm' },
+  { size: '34 × 4.0 mm' },
+  { size: '37 × 2.5 mm' },
+  { size: '37 × 3.0 mm' },
 ]
 
 export default function Products() {
@@ -45,7 +50,7 @@ export default function Products() {
             </div>
             <h2 className="text-3xl font-bold text-gray-800 mb-3">MS Angle Bar</h2>
             <p className="text-gray-600 leading-relaxed">
-              Robust, precision-rolled mild steel angles — the backbone of structural construction. Our angles are manufactured from quality recycled plates, rolled to exact specifications at our Bhavnagar works.
+              Robust, precision-rolled mild steel angles — available in both light and standard variants. The backbone of structural construction, manufactured from quality recycled plates and rolled to exact specifications at our Bhavnagar works.
             </p>
             <p className="text-gray-600 leading-relaxed mt-3">
               Each piece undergoes controlled rolling to ensure consistent dimensions, weight tolerance, and straightness across the entire length.

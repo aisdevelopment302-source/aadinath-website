@@ -84,7 +84,7 @@ export default function Home() {
                 Precision-rolled mild steel angles — available in both light and standard variants from 20mm to 37mm. The structural backbone for construction, fabrication, and industrial applications. Manufactured from quality recycled plates at our Bhavnagar works.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
-                {['20×2.5', '25×3.0', '30×3.0', '32×3.0', '35×3.0', '37×3.0'].map((s) => (
+                {['20×2.5', '24×2', '25×2.5', '25×3', '25×4', '25×5', '30×2.5', '30×3', '34×4', '37×2.5', '37×3'].map((s) => (
                   <span key={s} className="text-xs bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-medium">{s} mm</span>
                 ))}
               </div>
