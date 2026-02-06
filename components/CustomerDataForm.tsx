@@ -76,9 +76,9 @@ export default function CustomerDataForm({ batchId, onSuccess }: CustomerDataFor
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}
-          className="w-full bg-orange-100 hover:bg-orange-200 text-orange-700 px-4 py-3 rounded-lg font-semibold text-sm transition-colors"
+          className="w-full bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white px-4 py-3 rounded-lg font-bold text-base transition-all duration-150 shadow-lg hover:shadow-xl transform hover:scale-105 cursor-pointer"
         >
-          📝 Fill a Quick Form - Get In Touch With Us
+          📝 Get In Touch - Fill Quick Form
         </button>
       ) : (
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-5">
