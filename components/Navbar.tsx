@@ -14,8 +14,8 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <nav className="sticky top-0 z-50 bg-white shadow-md border-b border-gray-200">
+      <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3">
           <Image src="/images/logo-aa.png" alt="AA Logo" width={44} height={44} />
