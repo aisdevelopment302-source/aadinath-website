@@ -110,7 +110,7 @@ export default function VerifyContent() {
           {/* Manufacturer Info */}
           <div className="w-full text-left bg-gray-50 rounded-xl p-4 mb-6">
             <p className="text-sm text-gray-600"><span className="font-semibold">Manufacturer:</span> Aadinath Industries</p>
-            <p className="text-sm text-gray-600 mt-1"><span className="font-semibold">📍</span> Sihor, Gujarat</p>
+            <p className="text-sm text-gray-600 mt-1"><span className="font-semibold">📍</span> Sihor, Bhavnagar, Gujarat</p>
             <p className="text-sm text-gray-600 mt-1">
               <span className="font-semibold">📞</span>{' '}
               <a href="tel:+919825207616" className="text-orange-600 hover:underline">+91-9825207616</a>
