@@ -1,16 +1,44 @@
 # PROGRESS.md — Implementation Status & Decisions
 
-**Last Updated:** 2026-02-09 15:44 GMT+5:30
+**Last Updated:** 2026-02-10 16:15 GMT+5:30
 
 ---
 
-## 📊 Project Status: LIVE ✅
+## 📊 Project Status: LIVE ✅ (Analytics Phase Starting)
 
 The website is **live and operational** at https://aadinathindustries.in with full QR verification system and Firebase analytics working.
 
 ---
 
-## ✅ Today's Achievements (Feb 9, 2026)
+## ✅ Today's Achievements (Feb 10, 2026) — Analytics Foundation
+
+### Setup Complete
+1. ✅ **Installed Recharts** (3.7.0) for data visualization
+2. ✅ **Created lib/analytics-queries.ts** with 10+ Firestore query functions:
+   - getTotalScans, getTotalLeads, getTotalPageViews
+   - getConversionRate (leads/scans %)
+   - getTrafficByPage (visits per page)
+   - getTopLocations (geographic breakdown)
+   - getLeads (with filters: city, useCase, date range)
+   - getTrendData (daily aggregation)
+   - getAllMetrics (batch query)
+3. ✅ **Added PageTracker component** (client-side)
+   - Tracks every page view to Firestore
+   - Skips admin pages automatically
+   - Captures userAgent + hostname
+4. ✅ **Integrated tracking into app/layout.tsx**
+   - PageTracker runs on every navigation
+   - Data flows to page_views collection
+
+### Git Commit
+- **Commit:** `461d24b` on main branch
+- **Message:** "Feb 10: Setup analytics foundation - Recharts + page tracking + analytics queries"
+- **Status:** Pushed to GitHub, deploying to Vercel
+- **Files Changed:** 5 (2 new, 3 modified)
+
+---
+
+## ✅ Previous Achievements (Feb 9, 2026)
 
 ### Major Changes Completed
 1. ✅ **Batch System Removed**
@@ -215,17 +243,18 @@ b4a50f1 Previous commits...
 
 ---
 
-## 📋 Tomorrow's Checklist (Feb 10)
+## 📋 Tomorrow's Checklist (Feb 11)
 
-- [ ] Review today's deployment on https://aadinathindustries.in
-- [ ] Test admin login/logout
-- [ ] Test verify page (should still track events)
-- [ ] Verify Firestore rules are working (check Firebase Console)
-- [ ] Generate static QR code (15 min task)
-- [ ] Start analytics phase:
-  - [ ] Install Recharts
-  - [ ] Add page tracking to app/layout.tsx
-  - [ ] Create first analytics page (/admin/analytics/pages)
+- [ ] **Verify deployment** on https://aadinathindustries.in
+  - [ ] Check page tracker is working (Firestore page_views collection)
+  - [ ] Test all page visits are recorded
+- [ ] **Test analytics queries** in Firebase Console
+  - [ ] Run getTotalScans(), getTotalLeads() manually
+  - [ ] Verify data is being captured
+- [ ] **Start Dashboard Home Page** (/admin/analytics/dashboard)
+  - [ ] KPI cards: Total Scans, Total Leads, Conversion Rate, Page Views
+  - [ ] Trending section (last 7 days)
+  - [ ] Use getAllMetrics() query
 
 ---
 
