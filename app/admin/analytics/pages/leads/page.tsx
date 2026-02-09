@@ -4,6 +4,19 @@ import { useEffect, useState } from 'react';
 import { getLeads, CustomerData } from '@/lib/analytics-queries';
 import { DocumentArrowDownIcon } from '@heroicons/react/24/outline';
 
+// Helper function to safely format timestamp
+const formatDate = (timestamp: any) => {
+  if (!timestamp) return 'N/A';
+  try {
+    if (typeof timestamp.toDate === 'function') {
+      return new Date(timestamp.toDate()).toLocaleDateString();
+    }
+    return new Date(timestamp).toLocaleDateString();
+  } catch (error) {
+    return 'N/A';
+  }
+};
+
 export default function LeadsPage() {
   const [leads, setLeads] = useState<CustomerData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +78,7 @@ export default function LeadsPage() {
       lead.state || 'N/A',
       lead.useCase,
       lead.quantity,
-      new Date(lead.timestamp.toDate()).toLocaleDateString(),
+      formatDate(lead.timestamp),
     ]);
 
     const csv = [headers, ...rows].map((row) => row.join(',')).join('\n');
@@ -174,7 +187,7 @@ export default function LeadsPage() {
                     <td className="px-6 py-4 text-sm text-gray-600">{lead.useCase}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{lead.quantity}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(lead.timestamp.toDate()).toLocaleDateString()}
+                      {formatDate(lead.timestamp)}
                     </td>
                   </tr>
                 ))
