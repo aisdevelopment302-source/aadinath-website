@@ -46,38 +46,38 @@ export default function VerifyPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Verify Page Analytics</h1>
-        <p className="text-gray-600 mt-1">QR verification and lead conversion metrics.</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Verify Page Analytics</h1>
+        <p className="text-xs md:text-sm text-gray-600 mt-1">QR verification and lead conversion metrics.</p>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-gray-600 text-sm font-medium">Total QR Scans (30d)</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6">
+          <p className="text-gray-600 text-xs md:text-sm font-medium">Total QR Scans (30d)</p>
           {loading ? (
-            <div className="h-8 w-24 bg-gray-200 rounded animate-pulse mt-2" />
+            <div className="h-8 w-20 md:w-24 bg-gray-200 rounded animate-pulse mt-2" />
           ) : (
-            <p className="text-3xl font-bold text-gray-900 mt-2">{metrics?.totalScans || 0}</p>
+            <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">{metrics?.totalScans || 0}</p>
           )}
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-gray-600 text-sm font-medium">Form Submissions (30d)</p>
+        <div className="bg-white rounded-lg shadow p-4 md:p-6">
+          <p className="text-gray-600 text-xs md:text-sm font-medium">Form Submissions (30d)</p>
           {loading ? (
-            <div className="h-8 w-24 bg-gray-200 rounded animate-pulse mt-2" />
+            <div className="h-8 w-20 md:w-24 bg-gray-200 rounded animate-pulse mt-2" />
           ) : (
-            <p className="text-3xl font-bold text-gray-900 mt-2">{metrics?.totalLeads || 0}</p>
+            <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">{metrics?.totalLeads || 0}</p>
           )}
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-gray-600 text-sm font-medium">Conversion Rate</p>
+        <div className="bg-white rounded-lg shadow p-4 md:p-6">
+          <p className="text-gray-600 text-xs md:text-sm font-medium">Conversion Rate</p>
           {loading ? (
-            <div className="h-8 w-24 bg-gray-200 rounded animate-pulse mt-2" />
+            <div className="h-8 w-20 md:w-24 bg-gray-200 rounded animate-pulse mt-2" />
           ) : (
-            <p className="text-3xl font-bold text-gray-900 mt-2">
+            <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
               {(metrics?.conversionRate || 0).toFixed(1)}%
             </p>
           )}
@@ -85,10 +85,10 @@ export default function VerifyPage() {
       </div>
 
       {/* Conversion Funnel */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Conversion Funnel</h2>
+      <div className="bg-white rounded-lg shadow p-4 md:p-6">
+        <h2 className="text-base md:text-xl font-bold text-gray-900 mb-4 md:mb-6">Conversion Funnel</h2>
         {loading ? (
-          <div className="h-64 bg-gray-100 rounded animate-pulse" />
+          <div className="h-48 md:h-64 bg-gray-100 rounded animate-pulse" />
         ) : (
           <div className="space-y-4">
             {funnelData.map((item, idx) => {
@@ -114,16 +114,16 @@ export default function VerifyPage() {
       </div>
 
       {/* Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-blue-50 rounded-lg p-6">
-          <p className="text-blue-900 font-semibold">What is this page?</p>
-          <p className="text-gray-600 text-sm mt-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+        <div className="bg-blue-50 rounded-lg p-4 md:p-6">
+          <p className="text-blue-900 font-semibold text-sm md:text-base">What is this page?</p>
+          <p className="text-gray-600 text-xs md:text-sm mt-2">
             This page tracks customers scanning your QR code and submitting their contact information through the verification form.
           </p>
         </div>
-        <div className="bg-green-50 rounded-lg p-6">
-          <p className="text-green-900 font-semibold">How to improve?</p>
-          <p className="text-gray-600 text-sm mt-2">
+        <div className="bg-green-50 rounded-lg p-4 md:p-6">
+          <p className="text-green-900 font-semibold text-sm md:text-base">How to improve?</p>
+          <p className="text-gray-600 text-xs md:text-sm mt-2">
             Higher conversion rates mean more customers are entering their contact info. Check the Leads page to see submissions.
           </p>
         </div>
