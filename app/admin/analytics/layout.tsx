@@ -6,7 +6,7 @@ import {
   ChartBarIcon,
   GlobeAltIcon,
   CheckCircleIcon,
-  TrendingUpIcon,
+  ArrowTrendingUpIcon,
   UserGroupIcon,
   HomeIcon,
   ArrowLeftOnRectangleIcon,
@@ -21,7 +21,7 @@ const navItems = [
   { name: 'Geographic', href: '/admin/analytics/pages/geographic', icon: GlobeAltIcon },
   { name: 'Verify Analytics', href: '/admin/analytics/pages/verify', icon: CheckCircleIcon },
   { name: 'Leads', href: '/admin/analytics/pages/leads', icon: UserGroupIcon },
-  { name: 'Trends', href: '/admin/analytics/pages/trends', icon: TrendingUpIcon },
+  { name: 'Trends', href: '/admin/analytics/pages/trends', icon: ArrowTrendingUpIcon },
 ];
 
 export default function AnalyticsLayout({
