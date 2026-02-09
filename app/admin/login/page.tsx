@@ -19,8 +19,8 @@ export default function AdminLogin() {
 
     try {
       await loginAdmin(email, password)
-      // Redirect to dashboard on success
-      router.push('/admin/dashboard')
+      // Redirect to analytics dashboard on success
+      router.push('/admin/analytics/dashboard')
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.')
     } finally {
