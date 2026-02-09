@@ -282,10 +282,20 @@ export async function getLeads(filters?: {
     const q = constraints.length > 0 ? query(leadsRef, ...constraints) : query(leadsRef);
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    } as CustomerData));
+    return snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.name || 'Unknown',
+        email: data.email || '',
+        phone: data.phone || '',
+        city: data.city || '',
+        state: data.state,
+        useCase: data.useCase || '',
+        quantity: data.quantity || 0,
+        timestamp: data.timestamp || Timestamp.now(),
+      } as CustomerData;
+    });
   } catch (error) {
     console.error('Error fetching leads:', error);
     return [];
