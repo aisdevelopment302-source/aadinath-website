@@ -16,7 +16,7 @@ import { auth } from '@/lib/firebase-admin';
 import { useRouter } from 'next/navigation';
 
 const navItems = [
-  { name: 'Dashboard', href: '/admin/analytics/dashboard', icon: HomeIcon },
+  { name: 'Dashboard', href: '/admin/analytics', icon: HomeIcon },
   { name: 'Page Traffic', href: '/admin/analytics/pages/traffic', icon: ChartBarIcon },
   { name: 'Geographic', href: '/admin/analytics/pages/geographic', icon: GlobeAltIcon },
   { name: 'Verify Analytics', href: '/admin/analytics/pages/verify', icon: CheckCircleIcon },

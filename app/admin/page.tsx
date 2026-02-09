@@ -11,7 +11,7 @@ export default function AdminPage() {
     const currentUser = getCurrentUser()
     if (currentUser) {
       // User is logged in, redirect to analytics dashboard
-      router.push('/admin/analytics/dashboard')
+      router.push('/admin/analytics')
     } else {
       // User is not logged in, redirect to login
       router.push('/admin/login')
