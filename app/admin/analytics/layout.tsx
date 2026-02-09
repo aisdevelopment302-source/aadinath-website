@@ -12,7 +12,7 @@ import {
   ArrowLeftOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth } from '@/lib/firebase-admin';
 import { useRouter } from 'next/navigation';
 
 const navItems = [
