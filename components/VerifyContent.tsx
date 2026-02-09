@@ -10,11 +10,10 @@ import CustomerDataForm from '@/components/CustomerDataForm'
 
 export default function VerifyContent() {
   const searchParams = useSearchParams()
-  const batchId = searchParams.get('batch') || 'UNKNOWN'
-  const [isLoading, setIsLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setIsLoading(false)
+    setMounted(true)
 
     const source = searchParams.get('source') || 'UNKNOWN'
     const product = searchParams.get('product') || 'UNKNOWN'
@@ -51,6 +50,17 @@ export default function VerifyContent() {
     // Fire and forget tracking; do not block rendering
     trackScanEvent()
   }, [])
+
+  // Only render after hydration to avoid mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-lg p-8 text-center">
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
@@ -123,7 +133,7 @@ export default function VerifyContent() {
 
           {/* Customer Data Form */}
           <div className="w-full mb-6">
-            <CustomerDataForm batchId={batchId} />
+            <CustomerDataForm />
           </div>
 
           {/* Feedback CTA */}

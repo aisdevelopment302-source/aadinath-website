@@ -1,3 +1,5 @@
+import { ChatBubbleLeftIcon, CubeIcon, CheckBadgeIcon } from '@heroicons/react/24/solid'
+
 export default function ContactUs() {
   return (
     <>
@@ -77,9 +79,7 @@ export default function ContactUs() {
 
             <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border border-orange-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
               <div className="flex items-center gap-3 mb-3">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8s-9-3.582-9-8 4.03-8 9-8 9 3.582 9 8z" />
-                </svg>
+                <ChatBubbleLeftIcon className="w-6 h-6 text-orange-600" />
                 <h3 className="font-bold text-orange-700">WhatsApp</h3>
               </div>
               <p className="text-gray-700 text-sm mb-5 font-medium">Send us a message directly on WhatsApp for instant support.</p>
@@ -95,9 +95,7 @@ export default function ContactUs() {
 
             <div className="bg-gradient-to-br from-gray-50 to-slate-50 border border-gray-300 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
               <div className="flex items-center gap-3 mb-3">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m0 0l8 4m-8-4v10l8 4m0-10l8 4m-8-4v10M8 7v10m0 0l8 4" />
-                </svg>
+                <CubeIcon className="w-6 h-6 text-orange-600" />
                 <h3 className="font-bold text-gray-800">Bulk & Export</h3>
               </div>
               <p className="text-gray-700 text-sm mb-5 font-medium">For bulk orders, dealership, or export requirements, get in touch with our sales team.</p>
@@ -108,9 +106,7 @@ export default function ContactUs() {
 
             <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
               <div className="flex items-center gap-3 mb-3">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <CheckBadgeIcon className="w-6 h-6 text-orange-600" />
                 <h3 className="font-bold text-blue-900">Quality Assurance</h3>
               </div>
               <p className="text-gray-700 text-sm font-medium">

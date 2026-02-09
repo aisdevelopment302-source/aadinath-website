@@ -4,11 +4,10 @@ import { useState } from 'react'
 import { trackCustomerSubmission, getUserLocationFromIP } from '@/lib/analytics'
 
 interface CustomerDataFormProps {
-  batchId?: string
   onSuccess?: () => void
 }
 
-export default function CustomerDataForm({ batchId, onSuccess }: CustomerDataFormProps) {
+export default function CustomerDataForm({ onSuccess }: CustomerDataFormProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -44,7 +43,6 @@ export default function CustomerDataForm({ batchId, onSuccess }: CustomerDataFor
         city: formData.city || location.city,
         state: formData.state || location.state,
         country: location.country,
-        batchId,
       })
 
       if (result.success) {

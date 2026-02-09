@@ -13,17 +13,14 @@ The verification page (`/verify`) now captures:
 
 ### 1. QR Code Generation
 
-Create unique QR codes for each production batch:
+Create a static QR code for the verification page:
 
 **Format:**
 ```
-https://aadinathindustries.in/verify?batch=BATCH-2026-02-05-001
+https://aadinathindustries.in/verify
 ```
 
-**Batch ID Format:**
-- `BATCH-YYYY-MM-DD-XXX`
-- Example: `BATCH-2026-02-05-001` = first batch on Feb 5, 2026
-- Example: `BATCH-2026-02-05-002` = second batch on same day
+**Note:** The QR code is static (same for all shipments). Batch tracking can be added later when the ERP system is operational. Currently, all scans are logged to track traffic by geography and device type.
 
 ### 2. Sticker Placement
 
@@ -32,7 +29,7 @@ Print the QR code on stickers and attach to:
 - Invoices
 - Product packaging
 
-**Important:** Each batch gets a **unique QR code**, so you can track which batch is being verified by customers.
+**Important:** Use the same static QR code for all products.
 
 ### 3. Verification Page Flow
 
@@ -115,54 +112,52 @@ Each document shows:
 
 ## Generating QR Codes
 
-**Online Tool Option:**
+**Online Tool Option (Recommended for now):**
 - Go to https://qr-code-generator.com/
-- Enter URL: `https://aadinathindustries.in/verify?batch=BATCH-2026-02-05-001`
+- Enter URL: `https://aadinathindustries.in/verify`
 - Download PNG
 - Print on sticker sheet
+- Attach to product bundles
 
-**Automated Option (for future):**
-- Create a Python script in AIS ERP to:
-  1. Generate batch ID for current production
-  2. Create QR code image
-  3. Save to disk
-  4. Send to printer
+This QR code can be used for all products since the URL is static.
 
 ---
 
 ## Example Customer Journey
 
 1. **Customer receives angle bars** (with QR sticker on packaging)
-2. **Scans QR code** → Lands on verify page with `?batch=BATCH-2026-02-05-001`
+2. **Scans QR code** → Lands on verify page
 3. **Sees verification info** ✔ Verified product from Aadinath Industries
 4. **Optionally submits contact info** → "Help Us Serve You Better" form
    - We auto-detect city: Bangalore
    - They confirm/edit: Use Case = "Fabrication", Quantity = "1000 kg"
    - They give phone: "+919876543210"
 5. **Data saved to Firebase** → Your sales team sees lead immediately
-6. **Sales team reaches out** → "We saw you verified our batch! Interested in bulk supply?"
+6. **Sales team reaches out** → "We saw you're interested in our steel products! Let's discuss your needs."
 
 ---
 
 ## Next Steps
 
-1. **Set up batch ID generation** in AIS ERP production system
-   - When a batch is created, generate: `BATCH-YYYY-MM-DD-XXX`
-   - Store in database
+1. **Generate static QR code** for verification page
+   - Use online tool: https://qr-code-generator.com/
+   - URL: `https://aadinathindustries.in/verify`
+   - Print sticker sheet
+   - Attach to products immediately (no ERP dependency!)
 
-2. **Create QR codes** for upcoming batches
-   - Use online tool or write a script
-   - Print stickers
-
-3. **Build admin dashboard**
-   - View all scan events (heatmap)
+2. **Build analytics dashboard** (priority)
+   - View all scan events by geography and device
    - View all customer submissions (lead list)
    - Export as CSV
-   - See conversion: scans → form submissions
+   - Geographic heatmap and trends
 
-4. **Set up automation** (optional)
-   - Daily email: "You got 5 scans today, 2 form submissions"
-   - Link scans to production data in AIS ERP
+3. **Set up automation** (optional)
+   - Daily email: "You got X scans today, Y form submissions"
+   - Firebase admin dashboard for live tracking
+
+4. **Future: Add batch tracking** (when ERP is ready)
+   - Will enhance analytics with batch-level tracking
+   - Link scans to specific production runs
 
 ---
 
