@@ -33,10 +33,18 @@ export interface CustomerData {
 
 export interface PageView {
   id: string;
+  sessionId: string;
   page: string;
+  currentPage?: string;
+  previousPage?: string | null;
   timestamp: Timestamp;
   userAgent?: string;
   location?: string;
+  city?: string;
+  country?: string;
+  latitude?: number;
+  longitude?: number;
+  deviceType?: string;
 }
 
 export interface AnalyticsMetrics {
@@ -63,6 +71,53 @@ export interface TrendData {
   scans: number;
   leads: number;
   pageViews: number;
+}
+
+// Phase 2: Journey Analytics Interfaces
+export interface SessionView {
+  id: string;
+  currentPage: string;
+  previousPage: string | null;
+  timestamp: Date;
+  location: string;
+  city?: string;
+  country?: string;
+  deviceType?: string;
+}
+
+export interface JourneyData {
+  pages: string[];
+  duration: number; // milliseconds
+  converted: boolean;
+  sessionId: string;
+}
+
+export interface SessionMetrics {
+  sessionId: string;
+  duration: number; // milliseconds
+  pagesVisited: number;
+  path: string; // e.g., "Home → Products → Verify → Form"
+  city: string;
+  country?: string;
+  timestamp: Date;
+  converted: boolean;
+}
+
+export interface VerifyPageMetricsData {
+  totalScans: number;
+  totalSubmissions: number;
+  conversionRate: number; // percentage
+  avgTimeToSubmit: number; // milliseconds
+}
+
+export interface ScanToSubmitConversionData {
+  sessionId: string;
+  scanTimestamp: Date;
+  submitTimestamp: Date;
+  timeLag: number; // milliseconds
+  location: string;
+  customerName: string;
+  city?: string;
 }
 
 // Get total scans within date range
@@ -361,5 +416,344 @@ export async function getAllMetrics(
       totalPageViews: 0,
       conversionRate: 0,
     };
+  }
+}
+
+// ============================================
+// PHASE 2: JOURNEY PAGE ANALYTICS
+// ============================================
+
+/**
+ * Get all page views for a single user session
+ * 
+ * @param sessionId - Unique session identifier (UUID)
+ * @returns Array of page views in chronological order with location and device data
+ * @throws Will log error but return empty array
+ * 
+ * Use case: Show complete user journey for one session
+ * Example: User's path: Home (8:00) → Products (8:15) → Verify (8:20) → Form (8:22)
+ */
+export async function getUserSession(sessionId: string): Promise<SessionView[]> {
+  try {
+    if (!sessionId) {
+      console.warn('getUserSession: sessionId is required');
+      return [];
+    }
+
+    const pagesRef = collection(db, 'page_views');
+    const q = query(
+      pagesRef,
+      where('sessionId', '==', sessionId),
+      orderBy('timestamp', 'asc')
+    );
+
+    const snapshot = await getDocs(q);
+    
+    if (snapshot.empty) {
+      console.warn(`getUserSession: No page views found for sessionId ${sessionId}`);
+      return [];
+    }
+
+    return snapshot.docs.map((doc) => {
+      const data = doc.data() as any;
+      return {
+        id: doc.id,
+        currentPage: data.currentPage || data.page || '/',
+        previousPage: data.previousPage || null,
+        timestamp: data.timestamp?.toDate() || new Date(),
+        location: data.userLocation || `${data.city || 'Unknown'}, ${data.country || ''}`,
+        city: data.city,
+        country: data.country,
+        deviceType: data.deviceType,
+      } as SessionView;
+    });
+  } catch (error) {
+    console.error('Error fetching user session:', error);
+    return [];
+  }
+}
+
+/**
+ * Get simplified user journey for a session
+ * 
+ * @param sessionId - Unique session identifier (UUID)
+ * @returns Journey data: pages visited, total duration, conversion status
+ * @throws Will log error but return null/empty values
+ * 
+ * Use case: Quick summary - "User visited 4 pages over 3m 20s and submitted form"
+ */
+export async function getUserJourney(sessionId: string): Promise<JourneyData | null> {
+  try {
+    if (!sessionId) {
+      console.warn('getUserJourney: sessionId is required');
+      return null;
+    }
+
+    const sessionViews = await getUserSession(sessionId);
+    
+    if (sessionViews.length === 0) {
+      return null;
+    }
+
+    // Extract unique pages in order
+    const pages = sessionViews.map(v => v.currentPage);
+    const uniquePages = Array.from(new Set(pages));
+
+    // Calculate duration (first page to last page)
+    const firstTimestamp = sessionViews[0].timestamp.getTime();
+    const lastTimestamp = sessionViews[sessionViews.length - 1].timestamp.getTime();
+    const duration = lastTimestamp - firstTimestamp;
+
+    // Check if user converted (submitted form via customer_data)
+    const customerDataRef = collection(db, 'customer_data');
+    const convertQuery = query(
+      customerDataRef,
+      where('sessionId', '==', sessionId)
+    );
+    const convertSnapshot = await getDocs(convertQuery);
+    const converted = convertSnapshot.size > 0;
+
+    return {
+      pages: uniquePages,
+      duration,
+      converted,
+      sessionId,
+    };
+  } catch (error) {
+    console.error('Error fetching user journey:', error);
+    return null;
+  }
+}
+
+/**
+ * Get all unique sessions with aggregated metrics
+ * 
+ * @param limitCount - Maximum number of sessions to return (default: 100)
+ * @returns Array of session metrics sorted by most recent first
+ * @throws Will log error but return empty array
+ * 
+ * Use case: Journey page table showing all user sessions
+ * Fields: sessionId, duration, pagesVisited, path, location, timestamp, converted
+ */
+export async function getAllSessions(limitCount: number = 100): Promise<SessionMetrics[]> {
+  try {
+    const pagesRef = collection(db, 'page_views');
+    const q = query(
+      pagesRef,
+      orderBy('timestamp', 'desc'),
+      limit(limitCount * 10) // Get more docs to extract unique sessions
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      console.warn('getAllSessions: No page views found');
+      return [];
+    }
+
+    // Group by sessionId
+    const sessionMap = new Map<string, any[]>();
+    
+    snapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      const sessionId = data.sessionId;
+      
+      if (!sessionId) return; // Skip documents without sessionId
+      
+      if (!sessionMap.has(sessionId)) {
+        sessionMap.set(sessionId, []);
+      }
+      sessionMap.get(sessionId)!.push(data);
+    });
+
+    // Get conversion data
+    const customerDataRef = collection(db, 'customer_data');
+    const customerSnapshot = await getDocs(customerDataRef);
+    const convertedSessionIds = new Set(
+      customerSnapshot.docs.map(doc => doc.data().sessionId).filter(Boolean)
+    );
+
+    // Build session metrics
+    const sessions: SessionMetrics[] = [];
+    
+    sessionMap.forEach((pageViews, sessionId) => {
+      const sortedViews = pageViews.sort((a, b) => {
+        const aTime = a.timestamp?.toDate?.()?.getTime() || 0;
+        const bTime = b.timestamp?.toDate?.()?.getTime() || 0;
+        return aTime - bTime;
+      });
+
+      if (sortedViews.length === 0) return;
+
+      const firstTime = sortedViews[0].timestamp?.toDate?.()?.getTime() || 0;
+      const lastTime = sortedViews[sortedViews.length - 1].timestamp?.toDate?.()?.getTime() || 0;
+      const duration = lastTime - firstTime;
+
+      // Extract path
+      const pages = sortedViews.map(v => v.currentPage || v.page || '/');
+      const uniquePages = Array.from(new Set(pages));
+      const path = uniquePages.slice(0, 5).join(' → '); // Show first 5 pages
+
+      // Get location from first page view
+      const firstView = sortedViews[0];
+      const city = firstView.city || 'Unknown';
+      const country = firstView.country;
+      const timestamp = firstView.timestamp?.toDate?.() || new Date();
+
+      sessions.push({
+        sessionId,
+        duration,
+        pagesVisited: uniquePages.length,
+        path,
+        city,
+        country,
+        timestamp,
+        converted: convertedSessionIds.has(sessionId),
+      });
+    });
+
+    // Sort by timestamp descending (most recent first)
+    return sessions
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limitCount);
+  } catch (error) {
+    console.error('Error fetching all sessions:', error);
+    return [];
+  }
+}
+
+/**
+ * Get QR verification page metrics
+ * 
+ * @returns Object with scan counts, submission counts, conversion rate, and avg time
+ * @throws Will log error but return zero values
+ * 
+ * Use case: Verify/QR analytics card on dashboard
+ * Shows: Total scans, form submissions, conversion %, avg time to submit
+ */
+export async function getVerifyPageMetrics(): Promise<VerifyPageMetricsData> {
+  try {
+    // Count total /verify page scans (from scan_events collection)
+    const scanRef = collection(db, 'scan_events');
+    const scanSnapshot = await getDocs(scanRef);
+    const totalScans = scanSnapshot.size;
+
+    if (totalScans === 0) {
+      return {
+        totalScans: 0,
+        totalSubmissions: 0,
+        conversionRate: 0,
+        avgTimeToSubmit: 0,
+      };
+    }
+
+    // Count form submissions (from customer_data collection)
+    const customerRef = collection(db, 'customer_data');
+    const customerSnapshot = await getDocs(customerRef);
+    const totalSubmissions = customerSnapshot.size;
+
+    // Calculate conversion rate
+    const conversionRate = (totalSubmissions / totalScans) * 100;
+
+    // Calculate average time from scan to submission
+    let totalTimeToSubmit = 0;
+    let submissionCount = 0;
+
+    customerSnapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      const timeFromScanToSubmit = data.timeFromScanToSubmit;
+      
+      if (typeof timeFromScanToSubmit === 'number' && timeFromScanToSubmit > 0) {
+        totalTimeToSubmit += timeFromScanToSubmit;
+        submissionCount += 1;
+      }
+    });
+
+    const avgTimeToSubmit = submissionCount > 0 ? totalTimeToSubmit / submissionCount : 0;
+
+    return {
+      totalScans,
+      totalSubmissions,
+      conversionRate,
+      avgTimeToSubmit,
+    };
+  } catch (error) {
+    console.error('Error fetching verify page metrics:', error);
+    return {
+      totalScans: 0,
+      totalSubmissions: 0,
+      conversionRate: 0,
+      avgTimeToSubmit: 0,
+    };
+  }
+}
+
+/**
+ * Get scan-to-form-submission conversion data
+ * 
+ * @returns Array of conversions showing which scans led to form submissions
+ * @throws Will log error but return empty array
+ * 
+ * Use case: Detailed conversion tracking
+ * Shows: "Of 100 QR scans, 26 filled the form" (with details for each one)
+ */
+export async function getScanToSubmitConversion(): Promise<ScanToSubmitConversionData[]> {
+  try {
+    // Get all customer submissions
+    const customerRef = collection(db, 'customer_data');
+    const customerSnapshot = await getDocs(customerRef);
+
+    if (customerSnapshot.empty) {
+      console.log('getScanToSubmitConversion: No conversions found');
+      return [];
+    }
+
+    // Get all scan events for reference
+    const scanRef = collection(db, 'scan_events');
+    const scanSnapshot = await getDocs(scanRef);
+    
+    const scanMap = new Map<string, any>();
+    scanSnapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      if (data.sessionId) {
+        scanMap.set(data.sessionId, {
+          timestamp: data.timestamp?.toDate?.() || new Date(),
+          location: data.userLocation || `${data.city || 'Unknown'}, ${data.country || ''}`,
+          city: data.city,
+        });
+      }
+    });
+
+    // Build conversion data
+    const conversions: ScanToSubmitConversionData[] = customerSnapshot.docs
+      .map((doc) => {
+        const data = doc.data();
+        const scanData = scanMap.get(data.sessionId);
+
+        if (!scanData) {
+          return null; // Skip if no matching scan
+        }
+
+        const submitTimestamp = data.submittedAt?.toDate?.() || new Date();
+        const scanTimestamp = scanData.timestamp;
+        const timeLag = submitTimestamp.getTime() - scanTimestamp.getTime();
+
+        return {
+          sessionId: data.sessionId || 'unknown',
+          scanTimestamp,
+          submitTimestamp,
+          timeLag,
+          location: scanData.location,
+          customerName: data.name || 'Unknown',
+          city: scanData.city,
+        } as ScanToSubmitConversionData;
+      })
+      .filter((item): item is ScanToSubmitConversionData => item !== null)
+      .sort((a, b) => b.submitTimestamp.getTime() - a.submitTimestamp.getTime());
+
+    return conversions;
+  } catch (error) {
+    console.error('Error fetching scan to submit conversions:', error);
+    return [];
   }
 }
