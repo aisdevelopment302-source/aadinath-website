@@ -101,6 +101,11 @@ export interface SessionMetrics {
   country?: string;
   timestamp: Date;
   converted: boolean;
+  userAgent?: string; // Full user agent string
+  deviceType?: string; // mobile/desktop
+  sourceType?: string; // direct, qr, organic
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface VerifyPageMetricsData {
@@ -599,6 +604,21 @@ export async function getAllSessions(limitCount: number = 100): Promise<SessionM
       const city = firstView.city || 'Unknown';
       const country = firstView.country;
       const timestamp = firstView.timestamp?.toDate?.() || new Date();
+      const userAgent = firstView.userAgent;
+      const deviceType = firstView.deviceType;
+      const latitude = firstView.latitude;
+      const longitude = firstView.longitude;
+
+      // Detect source type from previousPage
+      let sourceType = 'direct';
+      if (firstView.previousPage) {
+        const prevPage = firstView.previousPage.toLowerCase();
+        if (prevPage.includes('verify') || prevPage.includes('qr')) {
+          sourceType = 'qr';
+        } else if (prevPage.includes('google') || prevPage.includes('organic')) {
+          sourceType = 'organic';
+        }
+      }
 
       sessions.push({
         sessionId,
@@ -609,6 +629,11 @@ export async function getAllSessions(limitCount: number = 100): Promise<SessionM
         country,
         timestamp,
         converted: convertedSessionIds.has(sessionId),
+        userAgent,
+        deviceType,
+        sourceType,
+        latitude,
+        longitude,
       });
     });
 
