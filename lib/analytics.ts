@@ -5,13 +5,28 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
  * Track verification page scan
  * Called when user visits /verify page with a QR code batch ID
  */
-export async function trackVerificationScan(batchId: string, userLocation?: string) {
+export async function trackVerificationScan(
+  batchId: string,
+  sessionId: string,
+  userLocation?: string,
+  locationData?: {
+    city?: string;
+    country?: string;
+    latitude?: number;
+    longitude?: number;
+  }
+) {
   try {
     await addDoc(collection(db, 'scan_events'), {
       batchId,
+      sessionId,
       pageUrl: '/verify',
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-      userLocation: userLocation || 'unknown',
+      userLocation: userLocation || locationData?.city || 'unknown',
+      city: locationData?.city || '',
+      country: locationData?.country || '',
+      latitude: locationData?.latitude || null,
+      longitude: locationData?.longitude || null,
       timestamp: serverTimestamp(),
       type: 'verification_scan',
     });
@@ -23,20 +38,28 @@ export async function trackVerificationScan(batchId: string, userLocation?: stri
 /**
  * Track customer data submission from verification page
  */
-export async function trackCustomerSubmission(data: {
-  name?: string;
-  email?: string;
-  phone?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  useCase?: string;
-  quantityNeeded?: string;
-  batchId?: string;
-}) {
+export async function trackCustomerSubmission(
+  data: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    useCase?: string;
+    quantityNeeded?: string;
+    batchId?: string;
+  },
+  sessionId: string,
+  scanEventId?: string,
+  timeFromScanToSubmit?: number
+) {
   try {
     await addDoc(collection(db, 'customer_data'), {
       ...data,
+      sessionId,
+      scanEventId,
+      timeFromScanToSubmit: timeFromScanToSubmit || null, // Time in milliseconds between scan and form submission
       submittedAt: serverTimestamp(),
       source: 'verification_page',
     });
@@ -50,7 +73,20 @@ export async function trackCustomerSubmission(data: {
 /**
  * Track page views (generic)
  */
-export async function trackPageView(pageName: string, customData?: Record<string, any>) {
+export async function trackPageView(
+  pageName: string,
+  customData?: Record<string, any> & {
+    sessionId?: string;
+    previousPage?: string;
+    currentPage?: string;
+    userLocation?: string;
+    city?: string;
+    country?: string;
+    latitude?: number;
+    longitude?: number;
+    deviceType?: string;
+  }
+) {
   try {
     await addDoc(collection(db, 'page_views'), {
       pageName,

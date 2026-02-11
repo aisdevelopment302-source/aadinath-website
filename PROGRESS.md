@@ -1,6 +1,40 @@
 # PROGRESS.md — Implementation Status & Decisions
 
-**Last Updated:** 2026-02-10 16:15 GMT+5:30
+**Last Updated:** 2026-02-11 15:15 GMT+5:30
+
+---
+
+## ✅ Phase 1 Complete: Journey Page Analytics (Feb 11, 2026)
+
+**Objective:** Fix data layer to track user journeys (sessionId, previousPage, geographic location) ✅
+
+### Completed Tasks
+1. ✅ **UUID Library** — Already installed (uuid@9.0.0)
+2. ✅ **PageTracker.tsx** — Updated to:
+   - Generate unique sessionId per user (localStorage + UUID)
+   - Track previousPage (from sessionStorage)
+   - Fixed geographic location bug (uses ipapi.co, shows city not hostname)
+   - Added fields: currentPage, previousPage, sessionId, userLocation, city, country, latitude, longitude, deviceType
+3. ✅ **lib/analytics.ts** — Enhanced tracking functions:
+   - `trackVerificationScan()` — Added sessionId, city, country, latitude, longitude
+   - `trackCustomerSubmission()` — Added sessionId, scanEventId, timeFromScanToSubmit
+   - `trackPageView()` — Enhanced with sessionId, previousPage, location fields
+4. ✅ **FIREBASE_COLLECTIONS.md** — Complete schema documentation:
+   - `scan_events` — Added sessionId + geographic fields
+   - `customer_data` — Added sessionId, scanEventId, timeFromScanToSubmit
+   - `page_views` — Documented all journey tracking fields
+   - Added Firestore index recommendations
+
+### Schema Updates Summary
+- **page_views:** sessionId (UUID), previousPage, currentPage, location (city/country/lat/lon), deviceType
+- **scan_events:** sessionId, city, country, latitude, longitude (geographic tracking)
+- **customer_data:** sessionId, scanEventId, timeFromScanToSubmit (journey funnel tracking)
+
+### Ready for Phase 2+
+- ✅ Data layer fully supports user journey tracking
+- ✅ All geographic location data captured (no hostname bug)
+- ✅ Session continuity across pages
+- ✅ Scan-to-form conversion funnel data available
 
 ---
 

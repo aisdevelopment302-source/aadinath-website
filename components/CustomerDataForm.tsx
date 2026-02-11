@@ -37,13 +37,16 @@ export default function CustomerDataForm({ onSuccess }: CustomerDataFormProps) {
       // Get user location
       const location = await getUserLocationFromIP()
 
+      // Get sessionId from localStorage
+      const sessionId = typeof window !== 'undefined' ? localStorage.getItem('sessionId') || '' : ''
+
       // Submit to Firebase
       const result = await trackCustomerSubmission({
         ...formData,
         city: formData.city || location.city,
         state: formData.state || location.state,
         country: location.country,
-      })
+      }, sessionId)
 
       if (result.success) {
         setSubmitted(true)

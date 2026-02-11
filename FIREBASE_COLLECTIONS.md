@@ -11,19 +11,35 @@ Tracks QR code scans from the verification page.
 ```json
 {
   "batchId": "BATCH-2026-02-05-001",
+  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
   "pageUrl": "/verify",
   "userAgent": "Mozilla/5.0...",
-  "userLocation": "Bangalore, Karnataka, India",
-  "timestamp": "2026-02-05T15:30:00Z",
-  "type": "verification_scan",
-  "ipAddress": "192.168.1.1" (optional),
+  "userLocation": "Bangalore, Karnataka",
+  "city": "Bangalore",
+  "country": "India",
   "latitude": 12.9716,
-  "longitude": 77.5946
+  "longitude": 77.5946,
+  "timestamp": "2026-02-05T15:30:00Z",
+  "type": "verification_scan"
 }
 ```
 
+**Fields:**
+- `batchId` (string) - Batch ID from QR code
+- `sessionId` (string) - Unique session identifier for user journey tracking
+- `pageUrl` (string) - Page where scan occurred
+- `userAgent` (string) - Browser user agent
+- `userLocation` (string) - City, State format
+- `city` (string) - City name from IP geolocation
+- `country` (string) - Country name from IP geolocation
+- `latitude` (number) - Geographic latitude
+- `longitude` (number) - Geographic longitude
+- `timestamp` (Timestamp) - Server timestamp of scan
+- `type` (string) - Event type (e.g., "verification_scan")
+
 **Indexes Recommended:**
 - `batchId` + `timestamp` (to find all scans for a batch)
+- `sessionId` + `timestamp` (to track user journey)
 - `timestamp` (for date range queries)
 
 ---
@@ -43,31 +59,82 @@ Customer information submitted via verification page form.
   "useCase": "construction",
   "quantityNeeded": "500 kg",
   "batchId": "BATCH-2026-02-05-001",
+  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+  "scanEventId": "doc-id-of-scan-event",
+  "timeFromScanToSubmit": 45000,
   "submittedAt": "2026-02-05T15:31:00Z",
   "source": "verification_page"
 }
 ```
 
+**Fields:**
+- `name` (string) - Customer name
+- `email` (string) - Customer email
+- `phone` (string) - Customer phone
+- `city` (string) - Customer city
+- `state` (string) - Customer state
+- `country` (string) - Customer country
+- `useCase` (string) - Use case for the product
+- `quantityNeeded` (string) - Quantity needed
+- `batchId` (string) - Related batch ID
+- `sessionId` (string) - Session ID for journey tracking
+- `scanEventId` (string) - Reference to the scan_event document (for linking scan to form submission)
+- `timeFromScanToSubmit` (number) - Time in milliseconds from scan to form submission
+- `submittedAt` (Timestamp) - Server timestamp of submission
+- `source` (string) - Source of submission (e.g., "verification_page")
+
 **Indexes Recommended:**
+- `sessionId` + `submittedAt` (to track customer journey)
 - `submittedAt` (for recent submissions)
 - `phone` (for duplicate checks)
+- `batchId` + `submittedAt` (to link to batch scans)
 
 ---
 
 ### 3. `page_views`
-Generic page view tracking across the website.
+Generic page view tracking across the website. Tracks user journeys with sessionId and previous page history.
 
 **Document Structure:**
 ```json
 {
-  "pageName": "/products",
+  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+  "previousPage": "/products",
+  "currentPage": "/verify",
   "timestamp": "2026-02-05T15:30:00Z",
   "userAgent": "Mozilla/5.0...",
-  "deviceType": "mobile", // or "desktop"
+  "userLocation": "Bangalore, Karnataka",
   "country": "India",
-  "city": "Bangalore"
+  "city": "Bangalore",
+  "latitude": 12.9716,
+  "longitude": 77.5946,
+  "deviceType": "mobile"
 }
 ```
+
+**Fields:**
+- `sessionId` (string) - Unique session identifier (UUID v4) - persists in localStorage across pages for same user
+- `previousPage` (string or null) - Previous page visited in the session (from sessionStorage)
+- `currentPage` (string) - Current page URL path (e.g., "/verify", "/contact-us", "/")
+- `timestamp` (Timestamp) - Server timestamp of the page view
+- `userAgent` (string) - Browser user agent string
+- `userLocation` (string) - City, State format (e.g., "Bangalore, Karnataka") - from IP geolocation
+- `country` (string) - Country name from IP geolocation
+- `city` (string) - City name from IP geolocation
+- `latitude` (number) - Geographic latitude from IP geolocation API (ipapi.co)
+- `longitude` (number) - Geographic longitude from IP geolocation API
+- `deviceType` (string) - "mobile" or "desktop" - detected from userAgent
+
+**Session Tracking:**
+- `sessionId` is generated once per user (on first visit) and stored in localStorage
+- Persists for the entire browser session
+- Allows tracking of user journey across multiple pages
+- Combined with `previousPage`, enables funnel analysis
+
+**Indexes Recommended:**
+- `sessionId` + `timestamp` (to reconstruct user journey)
+- `timestamp` (for date range queries)
+- `city` + `timestamp` (for geographic analysis)
+- `deviceType` + `timestamp` (for device-based analysis)
 
 ---
 
