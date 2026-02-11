@@ -30,11 +30,19 @@
 - **scan_events:** sessionId, city, country, latitude, longitude (geographic tracking)
 - **customer_data:** sessionId, scanEventId, timeFromScanToSubmit (journey funnel tracking)
 
+### Git & Deployment
+- ✅ Committed: `3ac7103` — Phase 1: Journey Page Analytics - Schema Updates
+- ✅ Pushed to GitHub: `main` branch
+- ✅ Vercel auto-deployment triggered (deploying now)
+- **Live URL:** https://aadinathindustries.in
+
 ### Ready for Phase 2+
 - ✅ Data layer fully supports user journey tracking
 - ✅ All geographic location data captured (no hostname bug)
-- ✅ Session continuity across pages
+- ✅ Session continuity across pages (localStorage + sessionStorage)
 - ✅ Scan-to-form conversion funnel data available
+- ✅ Device type tracking (mobile/desktop)
+- ✅ Full geographic precision (city, country, lat/lon)
 
 ---
 
