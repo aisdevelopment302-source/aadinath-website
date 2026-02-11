@@ -104,8 +104,27 @@ ais-website/
 │   │   └── page.tsx             # About page
 │   ├── contact-us/
 │   │   └── page.tsx             # Contact page
-│   └── verify/
-│       └── page.tsx             # QR verification page
+│   ├── verify/
+│   │   └── page.tsx             # QR verification page
+│   └── admin/                    # Protected admin pages (Firebase Auth)
+│       ├── login/
+│       │   └── page.tsx         # Admin login page
+│       └── analytics/
+│           ├── layout.tsx       # Analytics sidebar layout
+│           ├── page.tsx         # Dashboard home (KPIs, trends, recent sessions)
+│           └── pages/
+│               ├── journey/
+│               │   └── page.tsx # Journey/Sessions analysis (expandable table)
+│               ├── traffic/
+│               │   └── page.tsx # Page traffic analytics
+│               ├── geographic/
+│               │   └── page.tsx # Geographic analytics (heatmap)
+│               ├── verify/
+│               │   └── page.tsx # Verify/QR analytics (funnel, conversions)
+│               ├── leads/
+│               │   └── page.tsx # Leads management (CSV export)
+│               └── trends/
+│                   └── page.tsx # Trends & time series analysis
 ├── components/
 │   ├── Navbar.tsx               # Navigation bar
 │   ├── Footer.tsx               # Footer
@@ -114,7 +133,9 @@ ais-website/
 │   └── CustomerDataForm.tsx      # Lead capture form
 ├── lib/
 │   ├── firebase.ts              # Firebase initialization
-│   └── analytics.ts             # Tracking functions
+│   ├── firebase-admin.ts        # Firebase Auth utilities
+│   ├── analytics.ts             # Tracking functions
+│   └── analytics-queries.ts     # Firestore query functions (Phase 2)
 ├── public/
 │   ├── images/                  # All images (hero, products, etc.)
 │   └── icons/                   # SVG icons
@@ -190,12 +211,97 @@ See **SECURITY.md** for full details.
 - [x] Customer data form on verify page
 - [x] Vercel auto-deploy configured
 
+### ✅ Admin Dashboard (Phase 3)
+- [x] 7 analytics pages built & live
+- [x] Journey/Sessions page with expandable rows
+- [x] Verify/QR page with conversion funnel & heatmap
+- [x] Dashboard home with KPIs & trends
+- [x] Sidebar navigation with 7 links
+- [x] Loading states & error handling
+- [x] Mobile responsive design
+- [x] Client-side sorting & filtering
+- [x] Data visualization (Recharts)
+- [x] Firebase Auth integration
+
 ### ⏳ In Progress / Pending
+- [ ] Phase 4: Testing & validation (testing all pages on live deployment)
 - [ ] Batch ID generation in AIS ERP (when a batch is rolled)
 - [ ] QR code generation script (automated)
-- [ ] Admin dashboard (view scans, leads, export CSV)
+- [ ] CSV export from leads page (already built, ready to test)
 - [ ] Rotate Firebase keys (security issue)
 - [ ] Set up daily email digest of customer leads
+
+---
+
+## 📊 Admin Analytics Dashboard (Phase 3+)
+
+### Dashboard Pages (Protected via Firebase Auth)
+**Base URL:** `https://aadinathindustries.in/admin/analytics`
+
+#### 1. **Dashboard Home** (`/admin/analytics`)
+- **KPI Cards:** Total Sessions (7d), Avg Session Duration, QR Scan→Form Conversion Rate, Top Location
+- **Conversion Trend Chart:** 7-day LineChart (QR Scans vs Form Submissions)
+- **Recent Sessions Quick View:** Table of first 10 sessions with conversion status
+- **Quick Stats:** Color-coded cards showing Scans, Leads, Session Conversion %
+- **Use Case:** Executive overview of analytics
+
+#### 2. **Journey Analysis** (`/admin/analytics/pages/journey`)
+- **Sessions Table:** All user sessions with expandable rows
+  - Columns: Session ID, Duration, Pages Visited, Path, Location, Converted Status
+  - Stats: Total sessions, conversion rate %, avg session duration
+- **Sortable by:** Most recent, longest duration, conversion status
+- **Filterable by:** City, conversion status (converted/bounced)
+- **Expandable Rows:** Click to view detailed journey (page path, duration, conversion)
+- **Row Highlighting:** Green for converted, gray for bounced
+- **Use Case:** "Show me all user journeys and which ones converted"
+
+#### 3. **Verify/QR Analytics** (`/admin/analytics/pages/verify`)
+- **KPI Cards:** Total Scans, Form Submissions, Conversion Rate (%), Avg Time to Submit
+- **Conversion Funnel:** BarChart showing QR Scans → Form Submissions with percentages
+- **Recent Conversions Table:**
+  - Columns: Customer Name, Location, Scan Time, Submit Time, Time Lag
+  - Time lag color coding: Green <1m, Yellow <5m, Red >5m
+  - Sortable: By most recent or fastest conversion
+  - Filterable: By city
+- **Location Heatmap:** PieChart showing conversions by city
+- **Top Converting Cities:** Ranked list of top 5 cities by conversion count
+- **Use Case:** "Track QR scan → form submission conversion funnel"
+
+#### 4. **Page Traffic** (`/admin/analytics/pages/traffic`)
+- Table of page visit counts
+- Sorted by most visited pages
+- Shows last visited timestamp
+
+#### 5. **Geographic Analytics** (`/admin/analytics/pages/geographic`)
+- Bar chart of top locations
+- Table breakdown: City, Country, Scans, Percentage
+
+#### 6. **Leads Management** (`/admin/analytics/pages/leads`)
+- Full table of all customer submissions
+- Filters: City, Use Case
+- CSV export functionality
+
+#### 7. **Trends** (`/admin/analytics/pages/trends`)
+- Time period selector (7, 14, 30, 60 days)
+- LineChart: Scans, Leads, Page Views over time
+- Summary statistics
+
+### Admin Features (Phase 3)
+- ✅ **Firebase Authentication:** Email/password login for authorized users
+- ✅ **Sidebar Navigation:** 7 analytics pages with active state highlighting
+- ✅ **Loading States:** Spinning indicators & skeleton placeholders on all pages
+- ✅ **Error Handling:** Graceful failures with console logging
+- ✅ **Mobile Responsive:** All pages work on mobile/tablet/desktop
+- ✅ **Sorting & Filtering:** Client-side on journey and verify pages
+- ✅ **Data Visualization:** Recharts (LineChart, BarChart, PieChart)
+- ✅ **Real-time Updates:** Fetches latest data on page load
+
+### Data Sources (Firestore Collections)
+- **scan_events** → QR scans, location data
+- **customer_data** → Form submissions, conversion tracking
+- **page_views** → Session tracking, journey data
+- **engagement_events** → WhatsApp clicks, interactions
+- **contact_submissions** → Contact form entries
 
 ---
 
@@ -231,5 +337,5 @@ See **SECURITY.md** for full details.
 
 ---
 
-**Last Updated:** 2026-02-09  
-**Next Review:** 2026-02-16
+**Last Updated:** 2026-02-11 (Phase 3 Complete)  
+**Next Review:** 2026-02-18
