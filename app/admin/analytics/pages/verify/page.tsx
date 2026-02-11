@@ -133,15 +133,15 @@ export default function VerifyPage() {
   // Location breakdown (pie chart)
   const locationBreakdown = conversions.reduce(
     (acc, c) => {
-      const existing = acc.find((item) => item.city === c.city);
+      const existing = acc.find((item) => item.name === c.city);
       if (existing) {
         existing.value += 1;
       } else {
-        acc.push({ city: c.city || 'Unknown', value: 1 });
+        acc.push({ name: c.city || 'Unknown', value: 1 });
       }
       return acc;
     },
-    [] as { city: string; value: number }[]
+    [] as { name: string; value: number }[]
   );
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -246,7 +246,7 @@ export default function VerifyPage() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ city, value }) => `${city}: ${value}`}
+                  label={({ name, value }) => `${name}: ${value}`}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
@@ -280,10 +280,10 @@ export default function VerifyPage() {
                 .sort((a, b) => b.value - a.value)
                 .slice(0, 5)
                 .map((item, idx) => (
-                  <div key={item.city} className="flex items-center justify-between">
+                  <div key={item.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-semibold text-gray-600 w-6">#{idx + 1}</span>
-                      <span className="text-sm font-medium text-gray-900">{item.city}</span>
+                      <span className="text-sm font-medium text-gray-900">{item.name}</span>
                     </div>
                     <span className="text-sm font-bold text-blue-600">{item.value}</span>
                   </div>
