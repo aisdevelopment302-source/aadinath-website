@@ -85,7 +85,11 @@ export default function VerifyPage() {
 
         // Extract unique cities
         const uniqueCities = Array.from(
-          new Set(conversionsData.map((c) => c.city).filter(Boolean))
+          new Set(
+            conversionsData
+              .map((c) => c.city)
+              .filter((city): city is string => Boolean(city))
+          )
         );
         setCities(uniqueCities);
       } catch (error) {
