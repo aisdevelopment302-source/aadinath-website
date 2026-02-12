@@ -17,19 +17,23 @@ export async function trackVerificationScan(
   }
 ) {
   try {
-    await addDoc(collection(db, 'scan_events'), {
+    const docData: Record<string, any> = {
       batchId,
       sessionId,
       pageUrl: '/verify',
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
       userLocation: userLocation || locationData?.city || 'unknown',
-      city: locationData?.city || '',
-      country: locationData?.country || '',
-      latitude: locationData?.latitude || null,
-      longitude: locationData?.longitude || null,
       timestamp: serverTimestamp(),
       type: 'verification_scan',
-    });
+    };
+
+    // Only include location fields if they have values
+    if (locationData?.city) docData.city = locationData.city;
+    if (locationData?.country) docData.country = locationData.country;
+    if (locationData?.latitude !== undefined) docData.latitude = locationData.latitude;
+    if (locationData?.longitude !== undefined) docData.longitude = locationData.longitude;
+
+    await addDoc(collection(db, 'scan_events'), docData);
   } catch (error) {
     console.error('Error tracking verification scan:', error);
   }
@@ -55,14 +59,30 @@ export async function trackCustomerSubmission(
   timeFromScanToSubmit?: number
 ) {
   try {
-    await addDoc(collection(db, 'customer_data'), {
-      ...data,
+    // Filter out undefined and empty string values from data
+    const cleanData = Object.fromEntries(
+      Object.entries(data).filter(([, value]) => value !== undefined && value !== '')
+    );
+
+    // Build document object, filtering out undefined values
+    const docData: Record<string, any> = {
+      ...cleanData,
       sessionId,
-      scanEventId,
-      timeFromScanToSubmit: timeFromScanToSubmit || null, // Time in milliseconds between scan and form submission
       submittedAt: serverTimestamp(),
       source: 'verification_page',
-    });
+    };
+
+    // Only include scanEventId if it's provided and not empty
+    if (scanEventId) {
+      docData.scanEventId = scanEventId;
+    }
+
+    // Only include timeFromScanToSubmit if it's provided
+    if (timeFromScanToSubmit !== undefined) {
+      docData.timeFromScanToSubmit = timeFromScanToSubmit;
+    }
+
+    await addDoc(collection(db, 'customer_data'), docData);
     return { success: true };
   } catch (error) {
     console.error('Error tracking customer submission:', error);
@@ -88,11 +108,18 @@ export async function trackPageView(
   }
 ) {
   try {
+    // Filter out undefined and empty string values from customData
+    const cleanData = customData
+      ? Object.fromEntries(
+          Object.entries(customData).filter(([, value]) => value !== undefined && value !== '')
+        )
+      : {};
+
     await addDoc(collection(db, 'page_views'), {
       pageName,
       timestamp: serverTimestamp(),
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-      ...customData,
+      ...cleanData,
     });
   } catch (error) {
     console.error('Error tracking page view:', error);
