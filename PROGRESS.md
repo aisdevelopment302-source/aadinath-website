@@ -1,6 +1,30 @@
 # PROGRESS.md — Implementation Status & Decisions
 
-**Last Updated:** 2026-02-11 16:45 GMT+5:30
+**Last Updated:** 2026-02-12 16:25 GMT+5:30
+
+---
+
+## 🔧 BUGFIX: Firebase Customer Submission Error (Feb 12, 2026)
+
+**Issue:** FirebaseError when customers submit contact form
+- Error: `Function addDoc() called with invalid data. Unsupported field value: undefined`
+- Root cause: `scanEventId` and other optional fields were being saved as `undefined` in Firestore
+- Firebase doesn't allow `undefined` values in documents
+
+**Fix Applied:** ✅ **COMPLETE**
+- Updated `lib/analytics.ts` — `trackCustomerSubmission()` function
+- Filter out undefined and empty string values before saving to Firestore
+- Applied same fix to `trackVerificationScan()` and `trackPageView()` for consistency
+- All optional fields now conditionally included only if they have values
+
+**Changes:**
+- Modified 3 tracking functions in `lib/analytics.ts`
+- Commit: `ddaea74` — "Fix: Filter out undefined/empty fields in Firebase tracking to prevent addDoc errors"
+- Pushed to GitHub & auto-deployed to Vercel ✅
+
+**Result:** Customer form submissions now work without errors ✅
+
+---
 
 ---
 
