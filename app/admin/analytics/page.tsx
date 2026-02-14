@@ -201,7 +201,10 @@ export default function DashboardPage() {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
-                  Timestamp
+                  Date
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
+                  Time
                 </th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
                   Session ID
@@ -232,7 +235,7 @@ export default function DashboardPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
                     <div className="flex justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     </div>
@@ -240,7 +243,7 @@ export default function DashboardPage() {
                 </tr>
               ) : recentSessions.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
                     No sessions yet
                   </td>
                 </tr>
@@ -250,12 +253,17 @@ export default function DashboardPage() {
                     session.converted ? 'bg-green-50' : 'bg-gray-50'
                   }`}>
                     <td className="px-4 py-4 text-xs md:text-sm text-gray-700 whitespace-nowrap">
-                      {session.timestamp.toLocaleString('en-IN', { 
+                      {session.timestamp.toLocaleDateString('en-IN', { 
                         year: 'numeric',
                         month: 'short',
-                        day: '2-digit',
+                        day: '2-digit'
+                      })}
+                    </td>
+                    <td className="px-4 py-4 text-xs md:text-sm text-gray-700 whitespace-nowrap">
+                      {session.timestamp.toLocaleTimeString('en-IN', { 
                         hour: '2-digit',
-                        minute: '2-digit'
+                        minute: '2-digit',
+                        second: '2-digit'
                       })}
                     </td>
                     <td className="px-4 py-4 text-xs md:text-sm font-mono text-gray-900 truncate">
