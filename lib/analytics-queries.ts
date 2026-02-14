@@ -241,7 +241,7 @@ export async function getTrafficByPage(
 
     snapshot.docs.forEach((doc) => {
       const data = doc.data() as PageView;
-      const page = data.page || 'unknown';
+      const page = data.currentPage || data.page || 'unknown';
       const timestamp = data.timestamp?.toDate() || new Date();
 
       if (pageMap.has(page)) {
