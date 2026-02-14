@@ -75,7 +75,7 @@ function detectDeviceType(userAgent: string): string {
 }
 
 /**
- * Get location data from ipapi.co
+ * Get location data via our API route (avoids CORS issues)
  */
 async function getLocationFromIP(): Promise<{
   userLocation: string;
@@ -85,22 +85,18 @@ async function getLocationFromIP(): Promise<{
   longitude: number | null;
 }> {
   try {
-    const response = await fetch('https://ipapi.co/json/');
+    const response = await fetch('/api/geolocation');
     const data = await response.json();
-    
-    const city = data.city || '';
-    const region = data.region || '';
-    const userLocation = city && region ? `${city}, ${region}` : city || region || 'unknown';
 
     return {
-      userLocation,
-      country: data.country_name || '',
-      city: city,
+      userLocation: data.userLocation,
+      country: data.country || '',
+      city: data.city || '',
       latitude: data.latitude || null,
       longitude: data.longitude || null,
     };
   } catch (error) {
-    console.error('Error getting location from IP:', error);
+    console.error('Error getting location from geolocation API:', error);
     return {
       userLocation: 'unknown',
       country: '',
