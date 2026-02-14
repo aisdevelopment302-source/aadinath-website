@@ -49,13 +49,13 @@ export default function LeadsPage() {
 
     if (filters.city) {
       filtered = filtered.filter((lead) =>
-        lead.city.toLowerCase().includes(filters.city.toLowerCase())
+        lead.city?.toLowerCase().includes(filters.city.toLowerCase())
       );
     }
 
     if (filters.useCase) {
       filtered = filtered.filter((lead) =>
-        lead.useCase.toLowerCase().includes(filters.useCase.toLowerCase())
+        lead.useCase?.toLowerCase().includes(filters.useCase.toLowerCase())
       );
     }
 
