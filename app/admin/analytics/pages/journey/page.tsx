@@ -62,6 +62,7 @@ interface ColumnVisibility {
   userAgent: boolean;
   device: boolean;
   country: boolean;
+  city: boolean;
   duration: boolean;
   pages: boolean;
   status: boolean;
@@ -75,6 +76,7 @@ const DEFAULT_COLUMNS: ColumnVisibility = {
   userAgent: false,
   device: true,
   country: true,
+  city: true,
   duration: true,
   pages: true,
   status: true,
@@ -332,6 +334,11 @@ export default function JourneyPage() {
                     Country
                   </th>
                 )}
+                {columnVisibility.city && (
+                  <th className="px-4 py-3 text-left font-semibold text-xs md:text-sm">
+                    City
+                  </th>
+                )}
                 {columnVisibility.duration && (
                   <th className="px-4 py-3 text-left font-semibold text-xs md:text-sm">
                     Duration
@@ -353,7 +360,9 @@ export default function JourneyPage() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={
+                      Object.values(columnVisibility).filter(Boolean).length
+                    }
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     <div className="flex justify-center">
@@ -364,7 +373,9 @@ export default function JourneyPage() {
               ) : filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={
+                      Object.values(columnVisibility).filter(Boolean).length
+                    }
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     No sessions found matching your filters.
@@ -439,6 +450,11 @@ export default function JourneyPage() {
                     {columnVisibility.country && (
                       <td className="px-4 py-4 text-xs md:text-sm text-gray-700">
                         {session.country || 'Unknown'}
+                      </td>
+                    )}
+                    {columnVisibility.city && (
+                      <td className="px-4 py-4 text-xs md:text-sm text-gray-700">
+                        {session.city || 'Unknown'}
                       </td>
                     )}
                     {columnVisibility.duration && (
