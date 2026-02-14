@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { v4 as uuidv4 } from 'uuid'
 import { db } from '@/lib/firebase'
 import { getUserLocationFromIP } from '@/lib/analytics'
 import CustomerDataForm from '@/components/CustomerDataForm'
@@ -20,6 +21,18 @@ export default function VerifyContent() {
 
     const trackScanEvent = async () => {
       try {
+        // Get or create sessionId (same logic as PageTracker)
+        let sessionId = ''
+        if (typeof window !== 'undefined') {
+          sessionId = localStorage.getItem('sessionId') || uuidv4()
+          localStorage.setItem('sessionId', sessionId)
+          
+          // Store source in sessionStorage for PageTracker to pick up
+          if (source !== 'UNKNOWN') {
+            sessionStorage.setItem('trafficSource', source)
+          }
+        }
+
         const { city = 'UNKNOWN', state = 'UNKNOWN', country = 'UNKNOWN' } =
           (await getUserLocationFromIP()) || {}
 
@@ -31,6 +44,7 @@ export default function VerifyContent() {
         const scanEventsRef = collection(db, 'scan_events')
 
         await addDoc(scanEventsRef, {
+          sessionId,  // Now linked to page_views!
           source,
           product,
           city,
