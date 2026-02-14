@@ -55,6 +55,8 @@ function KPICard({ label, value, format = 'number', loading }: KPICardProps) {
 
 // Column visibility state interface
 interface ColumnVisibility {
+  date: boolean;
+  time: boolean;
   sessionId: boolean;
   source: boolean;
   userAgent: boolean;
@@ -66,6 +68,8 @@ interface ColumnVisibility {
 }
 
 const DEFAULT_COLUMNS: ColumnVisibility = {
+  date: true,
+  time: true,
   sessionId: true,
   source: true,
   userAgent: false,
@@ -293,6 +297,16 @@ export default function JourneyPage() {
           <table className="w-full text-sm">
             <thead className="bg-gradient-to-r from-gray-800 to-gray-700 text-white border-b border-gray-300">
               <tr>
+                {columnVisibility.date && (
+                  <th className="px-4 py-3 text-left font-semibold text-xs md:text-sm">
+                    Date
+                  </th>
+                )}
+                {columnVisibility.time && (
+                  <th className="px-4 py-3 text-left font-semibold text-xs md:text-sm">
+                    Time
+                  </th>
+                )}
                 {columnVisibility.sessionId && (
                   <th className="px-4 py-3 text-left font-semibold text-xs md:text-sm">
                     Session ID
@@ -339,9 +353,7 @@ export default function JourneyPage() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={
-                      Object.values(columnVisibility).filter(Boolean).length
-                    }
+                    colSpan={10}
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     <div className="flex justify-center">
@@ -352,9 +364,7 @@ export default function JourneyPage() {
               ) : filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={
-                      Object.values(columnVisibility).filter(Boolean).length
-                    }
+                    colSpan={10}
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     No sessions found matching your filters.
@@ -369,6 +379,24 @@ export default function JourneyPage() {
                       index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                     }`}
                   >
+                    {columnVisibility.date && (
+                      <td className="px-4 py-4 text-xs md:text-sm text-gray-700 whitespace-nowrap">
+                        {session.timestamp.toLocaleDateString('en-IN', { 
+                          year: 'numeric',
+                          month: 'short',
+                          day: '2-digit'
+                        })}
+                      </td>
+                    )}
+                    {columnVisibility.time && (
+                      <td className="px-4 py-4 text-xs md:text-sm text-gray-700 whitespace-nowrap">
+                        {session.timestamp.toLocaleTimeString('en-IN', { 
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit'
+                        })}
+                      </td>
+                    )}
                     {columnVisibility.sessionId && (
                       <td className="px-4 py-4 text-xs md:text-sm font-mono text-gray-900 truncate max-w-xs">
                         <span title={session.sessionId} className="hover:text-blue-600">
