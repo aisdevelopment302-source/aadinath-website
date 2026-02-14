@@ -204,13 +204,22 @@ export default function DashboardPage() {
                   Session ID
                 </th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
+                  Source
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
+                  Device
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
+                  Country
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
                   Duration
                 </th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
                   Pages
                 </th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
-                  Location
+                  City
                 </th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
                   Status
@@ -220,7 +229,7 @@ export default function DashboardPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                     <div className="flex justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     </div>
@@ -228,7 +237,7 @@ export default function DashboardPage() {
                 </tr>
               ) : recentSessions.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                     No sessions yet
                   </td>
                 </tr>
@@ -239,6 +248,15 @@ export default function DashboardPage() {
                   }`}>
                     <td className="px-4 py-4 text-xs md:text-sm font-mono text-gray-900 truncate">
                       {session.sessionId.substring(0, 12)}...
+                    </td>
+                    <td className="px-4 py-4 text-xs md:text-sm text-gray-700">
+                      <span className="capitalize">{session.sourceType || 'direct'}</span>
+                    </td>
+                    <td className="px-4 py-4 text-xs md:text-sm text-gray-700">
+                      <span className="capitalize">{session.deviceType || 'unknown'}</span>
+                    </td>
+                    <td className="px-4 py-4 text-xs md:text-sm text-gray-700">
+                      {session.country || 'Unknown'}
                     </td>
                     <td className="px-4 py-4 text-xs md:text-sm text-gray-700">
                       {Math.floor(session.duration / 60000)}m {Math.floor((session.duration % 60000) / 1000)}s
