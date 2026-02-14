@@ -129,14 +129,44 @@ export async function trackPageView(
 /**
  * Track WhatsApp button click
  */
-export async function trackWhatsAppClick() {
+export async function trackWhatsAppClick(sessionId?: string, source?: string) {
   try {
-    await addDoc(collection(db, 'engagement_events'), {
+    const docData: Record<string, any> = {
       type: 'whatsapp_click',
       timestamp: serverTimestamp(),
-    });
+      page: '/verify',
+    };
+    
+    if (sessionId) docData.sessionId = sessionId;
+    if (source) docData.source = source;
+    
+    await addDoc(collection(db, 'engagement_events'), docData);
   } catch (error) {
     console.error('Error tracking WhatsApp click:', error);
+  }
+}
+
+/**
+ * Track form interactions (open, submit, skip)
+ */
+export async function trackFormInteraction(
+  action: 'form_open' | 'form_submit' | 'form_skip',
+  sessionId?: string,
+  source?: string
+) {
+  try {
+    const docData: Record<string, any> = {
+      type: action,
+      timestamp: serverTimestamp(),
+      page: '/verify',
+    };
+    
+    if (sessionId) docData.sessionId = sessionId;
+    if (source) docData.source = source;
+    
+    await addDoc(collection(db, 'engagement_events'), docData);
+  } catch (error) {
+    console.error('Error tracking form interaction:', error);
   }
 }
 

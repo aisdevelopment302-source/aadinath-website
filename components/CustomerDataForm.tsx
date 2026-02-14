@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { trackCustomerSubmission, getUserLocationFromIP } from '@/lib/analytics'
+import { trackCustomerSubmission, getUserLocationFromIP, trackFormInteraction } from '@/lib/analytics'
 
 interface CustomerDataFormProps {
   onSuccess?: () => void
@@ -9,6 +9,26 @@ interface CustomerDataFormProps {
 
 export default function CustomerDataForm({ onSuccess }: CustomerDataFormProps) {
   const [isOpen, setIsOpen] = useState(false)
+  
+  // Get sessionId helper
+  const getSessionId = () => {
+    return typeof window !== 'undefined' ? localStorage.getItem('sessionId') || '' : '';
+  };
+  
+  // Get source helper
+  const getSource = () => {
+    return typeof window !== 'undefined' ? sessionStorage.getItem('trafficSource') || '' : '';
+  };
+  
+  const handleFormOpen = () => {
+    setIsOpen(true);
+    trackFormInteraction('form_open', getSessionId(), getSource());
+  };
+  
+  const handleFormSkip = () => {
+    setIsOpen(false);
+    trackFormInteraction('form_skip', getSessionId(), getSource());
+  };
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -76,7 +96,7 @@ export default function CustomerDataForm({ onSuccess }: CustomerDataFormProps) {
     <div className="w-full">
       {!isOpen ? (
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={handleFormOpen}
           className="w-full bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white px-4 py-3 rounded-lg font-bold text-base transition-all duration-150 shadow-lg hover:shadow-xl transform hover:scale-105 cursor-pointer"
         >
           📝 Get In Touch - Fill Quick Form
@@ -175,7 +195,7 @@ export default function CustomerDataForm({ onSuccess }: CustomerDataFormProps) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleFormSkip}
                   className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-2 rounded-lg font-semibold text-sm transition-colors"
                 >
                   Skip

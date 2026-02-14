@@ -12,39 +12,54 @@ import { db } from './firebase';
 export interface ScanEvent {
   id: string;
   timestamp: Timestamp;
-  batch?: string;
+  sessionId?: string;      // Links to page_views
+  source?: string;         // QR source identifier
+  product?: string;        // Product type
+  batch?: string;          // Legacy batch field
   city?: string;
+  state?: string;
   country?: string;
+  deviceType?: string;
   userAgent?: string;
-  source?: string;
+  referrer?: string;
 }
 
 export interface CustomerData {
   id: string;
+  sessionId?: string;      // Links to page_views
   name: string;
-  email: string;
-  phone: string;
-  city: string;
+  email?: string;
+  phone?: string;
+  city?: string;
   state?: string;
-  useCase: string;
-  quantity: number;
-  timestamp: Timestamp;
+  country?: string;
+  useCase?: string;
+  quantityNeeded?: string;
+  quantity?: number;       // Legacy field
+  timestamp?: Timestamp;   // Legacy field
+  submittedAt?: Timestamp; // Current field (use this)
+  source?: string;         // e.g., 'verification_page'
+  scanEventId?: string;    // Links to scan_events
+  timeFromScanToSubmit?: number;
 }
 
 export interface PageView {
   id: string;
   sessionId: string;
-  page: string;
-  currentPage?: string;
+  page?: string;           // Legacy field
+  currentPage?: string;    // Current field (use this)
   previousPage?: string | null;
   timestamp: Timestamp;
   userAgent?: string;
-  location?: string;
+  userLocation?: string;   // Written by PageTracker
+  location?: string;       // Legacy alias
   city?: string;
   country?: string;
   latitude?: number;
   longitude?: number;
   deviceType?: string;
+  source?: string;         // QR source param (e.g., "QR_BATCH_001")
+  sourceType?: string;     // Category: qr, direct, organic, social, referral
 }
 
 export interface AnalyticsMetrics {
@@ -784,6 +799,137 @@ export async function getScanToSubmitConversion(): Promise<ScanToSubmitConversio
     return conversions;
   } catch (error) {
     console.error('Error fetching scan to submit conversions:', error);
+    return [];
+  }
+}
+
+// ============================================
+// VERIFY PAGE ENGAGEMENT ANALYTICS
+// ============================================
+
+export interface EngagementMetrics {
+  formOpens: number;
+  formSubmits: number;
+  formSkips: number;
+  whatsappClicks: number;
+}
+
+export interface ScanEventData {
+  sessionId: string;
+  source: string;
+  product: string;
+  city: string;
+  state: string;
+  country: string;
+  deviceType: string;
+  timestamp: Date;
+  converted: boolean;
+  formOpened: boolean;
+  whatsappClicked: boolean;
+}
+
+/**
+ * Get engagement metrics for verify page
+ */
+export async function getEngagementMetrics(): Promise<EngagementMetrics> {
+  try {
+    const engagementRef = collection(db, 'engagement_events');
+    const snapshot = await getDocs(engagementRef);
+
+    const metrics: EngagementMetrics = {
+      formOpens: 0,
+      formSubmits: 0,
+      formSkips: 0,
+      whatsappClicks: 0,
+    };
+
+    snapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      switch (data.type) {
+        case 'form_open':
+          metrics.formOpens += 1;
+          break;
+        case 'form_submit':
+          metrics.formSubmits += 1;
+          break;
+        case 'form_skip':
+          metrics.formSkips += 1;
+          break;
+        case 'whatsapp_click':
+          metrics.whatsappClicks += 1;
+          break;
+      }
+    });
+
+    return metrics;
+  } catch (error) {
+    console.error('Error fetching engagement metrics:', error);
+    return {
+      formOpens: 0,
+      formSubmits: 0,
+      formSkips: 0,
+      whatsappClicks: 0,
+    };
+  }
+}
+
+/**
+ * Get all scan events with engagement data
+ */
+export async function getAllScanEvents(limitCount: number = 100): Promise<ScanEventData[]> {
+  try {
+    // Get all scan events
+    const scanRef = collection(db, 'scan_events');
+    const scanSnapshot = await getDocs(query(scanRef, orderBy('timestamp', 'desc'), limit(limitCount)));
+
+    if (scanSnapshot.empty) {
+      return [];
+    }
+
+    // Get converted sessions (from customer_data)
+    const customerRef = collection(db, 'customer_data');
+    const customerSnapshot = await getDocs(customerRef);
+    const convertedSessionIds = new Set(
+      customerSnapshot.docs.map((doc) => doc.data().sessionId).filter(Boolean)
+    );
+
+    // Get engagement events
+    const engagementRef = collection(db, 'engagement_events');
+    const engagementSnapshot = await getDocs(engagementRef);
+    
+    const formOpenedSessions = new Set<string>();
+    const whatsappClickedSessions = new Set<string>();
+    
+    engagementSnapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      if (data.sessionId) {
+        if (data.type === 'form_open') {
+          formOpenedSessions.add(data.sessionId);
+        } else if (data.type === 'whatsapp_click') {
+          whatsappClickedSessions.add(data.sessionId);
+        }
+      }
+    });
+
+    // Build scan event data
+    return scanSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        sessionId: data.sessionId || 'unknown',
+        source: data.source || 'unknown',
+        product: data.product || 'unknown',
+        city: data.city || 'Unknown',
+        state: data.state || '',
+        country: data.country || 'Unknown',
+        deviceType: data.deviceType || 'unknown',
+        timestamp: data.timestamp?.toDate?.() || new Date(),
+        converted: convertedSessionIds.has(data.sessionId),
+        formOpened: formOpenedSessions.has(data.sessionId),
+        whatsappClicked: whatsappClickedSessions.has(data.sessionId),
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching all scan events:', error);
     return [];
   }
 }

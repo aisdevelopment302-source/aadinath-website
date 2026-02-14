@@ -2,34 +2,31 @@
 
 import { useEffect, useState } from 'react';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
+  ResponsiveContainer,
+  Tooltip,
 } from 'recharts';
 import {
   getVerifyPageMetrics,
-  getScanToSubmitConversion,
+  getEngagementMetrics,
+  getAllScanEvents,
   VerifyPageMetricsData,
-  ScanToSubmitConversionData,
+  EngagementMetrics,
+  ScanEventData,
 } from '@/lib/analytics-queries';
-import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, XCircleIcon, ChatBubbleLeftRightIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 
 interface KPICardProps {
   label: string;
   value: number | string;
   format?: 'number' | 'percentage' | 'duration';
   loading?: boolean;
+  color?: string;
 }
 
-function KPICard({ label, value, format = 'number', loading }: KPICardProps) {
+function KPICard({ label, value, format = 'number', loading, color }: KPICardProps) {
   let formattedValue = value;
 
   if (!loading) {
@@ -54,7 +51,7 @@ function KPICard({ label, value, format = 'number', loading }: KPICardProps) {
         {loading ? (
           <div className="h-8 w-24 bg-gray-200 rounded animate-pulse" />
         ) : (
-          <p className="text-2xl md:text-3xl font-bold text-gray-900">{formattedValue}</p>
+          <p className={`text-2xl md:text-3xl font-bold ${color || 'text-gray-900'}`}>{formattedValue}</p>
         )}
       </div>
     </div>
@@ -63,35 +60,27 @@ function KPICard({ label, value, format = 'number', loading }: KPICardProps) {
 
 export default function VerifyPage() {
   const [metrics, setMetrics] = useState<VerifyPageMetricsData | null>(null);
-  const [conversions, setConversions] = useState<ScanToSubmitConversionData[]>([]);
+  const [engagement, setEngagement] = useState<EngagementMetrics | null>(null);
+  const [scanEvents, setScanEvents] = useState<ScanEventData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<'recent' | 'timelag'>('recent');
-  const [filterCity, setFilterCity] = useState<string>('');
-  const [cities, setCities] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<'recent' | 'converted'>('recent');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'converted' | 'not_converted'>('all');
 
-  // Load metrics and conversions
+  // Load data
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
 
-        const [metricsData, conversionsData] = await Promise.all([
+        const [metricsData, engagementData, scansData] = await Promise.all([
           getVerifyPageMetrics(),
-          getScanToSubmitConversion(),
+          getEngagementMetrics(),
+          getAllScanEvents(100),
         ]);
 
         setMetrics(metricsData);
-        setConversions(conversionsData);
-
-        // Extract unique cities
-        const uniqueCities = Array.from(
-          new Set(
-            conversionsData
-              .map((c) => c.city)
-              .filter((city): city is string => Boolean(city))
-          )
-        );
-        setCities(uniqueCities);
+        setEngagement(engagementData);
+        setScanEvents(scansData);
       } catch (error) {
         console.error('Error loading verify page data:', error);
       } finally {
@@ -102,104 +91,82 @@ export default function VerifyPage() {
     loadData();
   }, []);
 
-  // Filter and sort conversions
-  let filteredConversions = conversions.filter((c) => {
-    if (filterCity && c.city !== filterCity) return false;
+  // Filter and sort scans
+  let filteredScans = scanEvents.filter((s) => {
+    if (filterStatus === 'converted' && !s.converted) return false;
+    if (filterStatus === 'not_converted' && s.converted) return false;
     return true;
   });
 
   if (sortBy === 'recent') {
-    filteredConversions = filteredConversions.sort(
-      (a, b) => b.submitTimestamp.getTime() - a.submitTimestamp.getTime()
-    );
-  } else if (sortBy === 'timelag') {
-    filteredConversions = filteredConversions.sort((a, b) => a.timeLag - b.timeLag);
+    filteredScans = filteredScans.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  } else if (sortBy === 'converted') {
+    filteredScans = filteredScans.sort((a, b) => {
+      if (a.converted === b.converted) return b.timestamp.getTime() - a.timestamp.getTime();
+      return a.converted ? -1 : 1;
+    });
   }
 
-  // Funnel data
+  // Funnel data with engagement
   const funnelData = [
-    {
-      stage: 'QR Scans',
-      count: metrics?.totalScans || 0,
-      color: '#3b82f6',
-    },
-    {
-      stage: 'Form Submissions',
-      count: metrics?.totalSubmissions || 0,
-      color: '#10b981',
-    },
+    { stage: 'QR Scans', count: metrics?.totalScans || 0, color: '#3b82f6' },
+    { stage: 'Form Opened', count: engagement?.formOpens || 0, color: '#f59e0b' },
+    { stage: 'Form Submitted', count: metrics?.totalSubmissions || 0, color: '#10b981' },
+    { stage: 'WhatsApp Clicked', count: engagement?.whatsappClicks || 0, color: '#22c55e' },
   ];
 
-  // Location breakdown (pie chart)
-  const locationBreakdown = conversions.reduce(
-    (acc, c) => {
-      const existing = acc.find((item) => item.name === c.city);
-      if (existing) {
-        existing.value += 1;
-      } else {
-        acc.push({ name: c.city || 'Unknown', value: 1 });
-      }
-      return acc;
-    },
-    [] as { name: string; value: number }[]
-  );
-
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+  // Pie chart for scan outcomes
+  const outcomeData = [
+    { name: 'Converted', value: scanEvents.filter(s => s.converted).length, color: '#10b981' },
+    { name: 'Form Opened (not submitted)', value: scanEvents.filter(s => s.formOpened && !s.converted).length, color: '#f59e0b' },
+    { name: 'WhatsApp Only', value: scanEvents.filter(s => s.whatsappClicked && !s.converted && !s.formOpened).length, color: '#22c55e' },
+    { name: 'No Engagement', value: scanEvents.filter(s => !s.converted && !s.formOpened && !s.whatsappClicked).length, color: '#ef4444' },
+  ].filter(d => d.value > 0);
 
   return (
     <div className="space-y-6 md:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-          Verify Page Analytics
-        </h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Verify Page Analytics</h1>
         <p className="text-sm md:text-base text-gray-600 mt-1">
-          QR verification and lead conversion metrics.
+          QR verification, engagement tracking, and lead conversion metrics.
         </p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-        <KPICard
-          label="Total Scans"
-          value={metrics?.totalScans || 0}
-          loading={loading}
-        />
-        <KPICard
-          label="Form Submissions"
-          value={metrics?.totalSubmissions || 0}
-          loading={loading}
-        />
-        <KPICard
-          label="Conversion Rate"
-          value={metrics?.conversionRate || 0}
-          format="percentage"
-          loading={loading}
-        />
-        <KPICard
-          label="Avg Time to Submit"
-          value={metrics?.avgTimeToSubmit || 0}
-          format="duration"
-          loading={loading}
+      {/* KPI Cards - Row 1: Core Metrics */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-6">
+        <KPICard label="Total Scans" value={metrics?.totalScans || 0} loading={loading} color="text-blue-600" />
+        <KPICard label="Form Submissions" value={metrics?.totalSubmissions || 0} loading={loading} color="text-green-600" />
+        <KPICard label="Conversion Rate" value={metrics?.conversionRate || 0} format="percentage" loading={loading} />
+        <KPICard label="Avg Time to Submit" value={metrics?.avgTimeToSubmit || 0} format="duration" loading={loading} />
+      </div>
+
+      {/* KPI Cards - Row 2: Engagement Metrics */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-6">
+        <KPICard label="Form Opens" value={engagement?.formOpens || 0} loading={loading} color="text-orange-600" />
+        <KPICard label="Form Skips" value={engagement?.formSkips || 0} loading={loading} color="text-red-500" />
+        <KPICard label="WhatsApp Clicks" value={engagement?.whatsappClicks || 0} loading={loading} color="text-green-500" />
+        <KPICard 
+          label="Form Open Rate" 
+          value={metrics?.totalScans ? ((engagement?.formOpens || 0) / metrics.totalScans) * 100 : 0} 
+          format="percentage" 
+          loading={loading} 
         />
       </div>
 
       {/* Conversion Funnel */}
       <div className="bg-white rounded-lg shadow p-4 md:p-6">
-        <h2 className="text-base md:text-xl font-bold text-gray-900 mb-4 md:mb-6">
-          Conversion Funnel
-        </h2>
+        <h2 className="text-base md:text-xl font-bold text-gray-900 mb-4 md:mb-6">Engagement Funnel</h2>
         {loading ? (
           <div className="h-48 md:h-64 bg-gray-100 rounded animate-pulse" />
         ) : (
           <div className="space-y-4">
             {funnelData.map((item, idx) => {
-              const maxCount = Math.max(...funnelData.map((d) => d.count));
-              const percentage = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
-              const conversionPercent =
-                idx === 1 && funnelData[0].count > 0
-                  ? ((item.count / funnelData[0].count) * 100).toFixed(1)
-                  : null;
+              const maxCount = Math.max(...funnelData.map((d) => d.count), 1);
+              const percentage = (item.count / maxCount) * 100;
+              const conversionFromScans = metrics?.totalScans 
+                ? ((item.count / metrics.totalScans) * 100).toFixed(1) 
+                : '0';
 
               return (
                 <div key={item.stage}>
@@ -207,14 +174,14 @@ export default function VerifyPage() {
                     <span className="text-sm font-medium text-gray-900">{item.stage}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-gray-900">{item.count}</span>
-                      {conversionPercent && (
-                        <span className="text-xs text-gray-600">({conversionPercent}%)</span>
+                      {idx > 0 && (
+                        <span className="text-xs text-gray-600">({conversionFromScans}% of scans)</span>
                       )}
                     </div>
                   </div>
                   <div className="h-8 bg-gray-200 rounded overflow-hidden">
                     <div
-                      className={`h-full transition-all duration-500`}
+                      className="h-full transition-all duration-500"
                       style={{ width: `${percentage}%`, backgroundColor: item.color }}
                     />
                   </div>
@@ -227,22 +194,18 @@ export default function VerifyPage() {
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-        {/* Location Breakdown */}
+        {/* Scan Outcomes Pie Chart */}
         <div className="bg-white rounded-lg shadow p-4 md:p-6">
-          <h2 className="text-base md:text-lg font-bold text-gray-900 mb-4">
-            Conversions by Location
-          </h2>
+          <h2 className="text-base md:text-lg font-bold text-gray-900 mb-4">Scan Outcomes</h2>
           {loading ? (
             <div className="h-64 bg-gray-100 rounded animate-pulse" />
-          ) : locationBreakdown.length === 0 ? (
-            <div className="h-64 flex items-center justify-center text-gray-500">
-              No conversion data available
-            </div>
+          ) : outcomeData.length === 0 ? (
+            <div className="h-64 flex items-center justify-center text-gray-500">No data available</div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={locationBreakdown}
+                  data={outcomeData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -251,53 +214,47 @@ export default function VerifyPage() {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {locationBreakdown.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {outcomeData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `${value} conversions`} />
+                <Tooltip />
               </PieChart>
             </ResponsiveContainer>
           )}
         </div>
 
-        {/* Top Converting Cities */}
+        {/* Quick Stats */}
         <div className="bg-white rounded-lg shadow p-4 md:p-6">
-          <h2 className="text-base md:text-lg font-bold text-gray-900 mb-4">
-            Top Converting Cities
-          </h2>
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />
-              ))}
+          <h2 className="text-base md:text-lg font-bold text-gray-900 mb-4">Quick Stats</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">Total QR Scans</span>
+              <span className="text-lg font-bold text-blue-600">{metrics?.totalScans || 0}</span>
             </div>
-          ) : locationBreakdown.length === 0 ? (
-            <p className="text-gray-500 text-sm">No conversion data available</p>
-          ) : (
-            <div className="space-y-3">
-              {locationBreakdown
-                .sort((a, b) => b.value - a.value)
-                .slice(0, 5)
-                .map((item, idx) => (
-                  <div key={item.name} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-gray-600 w-6">#{idx + 1}</span>
-                      <span className="text-sm font-medium text-gray-900">{item.name}</span>
-                    </div>
-                    <span className="text-sm font-bold text-blue-600">{item.value}</span>
-                  </div>
-                ))}
+            <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">Form Interactions</span>
+              <span className="text-lg font-bold text-orange-600">
+                {(engagement?.formOpens || 0) + (engagement?.formSkips || 0)}
+              </span>
             </div>
-          )}
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">Total Leads Generated</span>
+              <span className="text-lg font-bold text-green-600">{metrics?.totalSubmissions || 0}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">WhatsApp Contacts</span>
+              <span className="text-lg font-bold text-emerald-600">{engagement?.whatsappClicks || 0}</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Recent Conversions Table */}
+      {/* All Scan Events Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="p-4 md:p-6 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h2 className="text-base md:text-lg font-bold text-gray-900">Recent Conversions</h2>
+            <h2 className="text-base md:text-lg font-bold text-gray-900">All QR Scan Events</h2>
             <div className="flex gap-3">
               <select
                 value={sortBy}
@@ -305,23 +262,18 @@ export default function VerifyPage() {
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="recent">Most Recent</option>
-                <option value="timelag">Fastest Conversion</option>
+                <option value="converted">Conversion Status</option>
               </select>
 
-              {cities.length > 0 && (
-                <select
-                  value={filterCity}
-                  onChange={(e) => setFilterCity(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">All Cities</option>
-                  {cities.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
-              )}
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as any)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Scans</option>
+                <option value="converted">Converted Only</option>
+                <option value="not_converted">Not Converted</option>
+              </select>
             </div>
           </div>
         </div>
@@ -330,65 +282,73 @@ export default function VerifyPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
-                  Customer Name
-                </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
-                  Location
-                </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
-                  Scan Time
-                </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
-                  Submit Time
-                </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">
-                  Time Lag
-                </th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">Date</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">Time</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">Source</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">City</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">Device</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">Form</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">WhatsApp</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900 text-xs md:text-sm">Status</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                     <div className="flex justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     </div>
                   </td>
                 </tr>
-              ) : filteredConversions.length === 0 ? (
+              ) : filteredScans.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
-                    {filterCity ? 'No conversions found for selected city.' : 'No conversions yet.'}
+                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                    No scan events found.
                   </td>
                 </tr>
               ) : (
-                filteredConversions.slice(0, 20).map((conversion) => (
-                  <tr key={conversion.sessionId} className="border-b border-gray-200 hover:bg-gray-50">
-                    <td className="px-4 py-4 text-xs md:text-sm text-gray-900 font-medium">
-                      {conversion.customerName}
+                filteredScans.slice(0, 50).map((scan, index) => (
+                  <tr key={`${scan.sessionId}-${index}`} className="border-b border-gray-200 hover:bg-gray-50">
+                    <td className="px-4 py-4 text-xs md:text-sm text-gray-700 whitespace-nowrap">
+                      {scan.timestamp.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: '2-digit' })}
+                    </td>
+                    <td className="px-4 py-4 text-xs md:text-sm text-gray-700 whitespace-nowrap">
+                      {scan.timestamp.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                     </td>
                     <td className="px-4 py-4 text-xs md:text-sm text-gray-700">
-                      {conversion.city}
-                    </td>
-                    <td className="px-4 py-4 text-xs md:text-sm text-gray-700">
-                      {conversion.scanTimestamp.toLocaleTimeString()}
-                    </td>
-                    <td className="px-4 py-4 text-xs md:text-sm text-gray-700">
-                      {conversion.submitTimestamp.toLocaleTimeString()}
-                    </td>
-                    <td className="px-4 py-4 text-xs md:text-sm font-medium">
-                      <span
-                        className={`px-2 py-1 rounded ${
-                          conversion.timeLag < 60000
-                            ? 'bg-green-100 text-green-800'
-                            : conversion.timeLag < 300000
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {Math.floor(conversion.timeLag / 1000)}s
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        {scan.source}
                       </span>
+                    </td>
+                    <td className="px-4 py-4 text-xs md:text-sm text-gray-700">{scan.city}</td>
+                    <td className="px-4 py-4 text-xs md:text-sm text-gray-700 capitalize">{scan.deviceType}</td>
+                    <td className="px-4 py-4 text-xs md:text-sm">
+                      {scan.formOpened ? (
+                        <DocumentTextIcon className="w-5 h-5 text-orange-500" title="Form Opened" />
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4 text-xs md:text-sm">
+                      {scan.whatsappClicked ? (
+                        <ChatBubbleLeftRightIcon className="w-5 h-5 text-green-500" title="WhatsApp Clicked" />
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4 text-xs md:text-sm">
+                      {scan.converted ? (
+                        <div className="flex items-center gap-1">
+                          <CheckCircleIcon className="w-5 h-5 text-green-600" />
+                          <span className="text-green-600 font-medium">Converted</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <XCircleIcon className="w-5 h-5 text-gray-400" />
+                          <span className="text-gray-500">Pending</span>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -397,33 +357,27 @@ export default function VerifyPage() {
           </table>
         </div>
 
-        {!loading && filteredConversions.length === 0 && (
-          <div className="px-4 py-8 text-center text-gray-500 text-sm">
-            No conversion data to display
-          </div>
-        )}
-
-        {!loading && filteredConversions.length > 20 && (
+        {!loading && filteredScans.length > 50 && (
           <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 text-xs text-gray-600">
-            Showing 20 of {filteredConversions.length} conversions
+            Showing 50 of {filteredScans.length} scan events
           </div>
         )}
       </div>
 
       {/* Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-        <div className="bg-blue-50 rounded-lg p-4 md:p-6">
-          <p className="text-blue-900 font-semibold text-sm md:text-base">Conversion Funnel</p>
+        <div className="bg-blue-50 rounded-lg p-4 md:p-6 border border-blue-200">
+          <p className="text-blue-900 font-semibold text-sm md:text-base">Engagement Tracking</p>
           <p className="text-gray-600 text-xs md:text-sm mt-2">
-            Track how many QR scans lead to form submissions. The conversion rate shows the
-            percentage of scans that result in customer leads.
+            We track when users open the form, submit it, skip it, or click WhatsApp. 
+            This helps understand user behavior beyond just conversions.
           </p>
         </div>
-        <div className="bg-green-50 rounded-lg p-4 md:p-6">
-          <p className="text-green-900 font-semibold text-sm md:text-base">Time Lag Insights</p>
+        <div className="bg-green-50 rounded-lg p-4 md:p-6 border border-green-200">
+          <p className="text-green-900 font-semibold text-sm md:text-base">Conversion Funnel</p>
           <p className="text-gray-600 text-xs md:text-sm mt-2">
-            Green = fast (under 1m), Yellow = medium (under 5m), Red = slow. Faster conversions
-            indicate higher engagement.
+            The funnel shows: Scans → Form Opens → Submissions → WhatsApp. 
+            Each step shows what percentage of original scans reached that stage.
           </p>
         </div>
       </div>

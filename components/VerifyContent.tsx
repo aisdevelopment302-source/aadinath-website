@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { v4 as uuidv4 } from 'uuid'
 import { db } from '@/lib/firebase'
-import { getUserLocationFromIP } from '@/lib/analytics'
+import { getUserLocationFromIP, trackWhatsAppClick } from '@/lib/analytics'
 import CustomerDataForm from '@/components/CustomerDataForm'
 
 export default function VerifyContent() {
@@ -159,6 +159,11 @@ export default function VerifyContent() {
               href="https://wa.me/919825207616"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                const sessionId = typeof window !== 'undefined' ? localStorage.getItem('sessionId') || '' : '';
+                const source = typeof window !== 'undefined' ? sessionStorage.getItem('trafficSource') || '' : '';
+                trackWhatsAppClick(sessionId, source);
+              }}
               className="w-full inline-block text-center bg-green-500 hover:bg-green-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-colors"
             >
               Contact on WhatsApp
