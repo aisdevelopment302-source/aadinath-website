@@ -103,7 +103,8 @@ export interface SessionMetrics {
   converted: boolean;
   userAgent?: string; // Full user agent string
   deviceType?: string; // mobile/desktop
-  sourceType?: string; // direct, qr, organic
+  sourceType?: string; // direct, qr, organic, social, referral
+  source?: string; // actual source param from URL (e.g., "QR_BATCH_001")
   latitude?: number;
   longitude?: number;
 }
@@ -609,9 +610,12 @@ export async function getAllSessions(limitCount: number = 100): Promise<SessionM
       const latitude = firstView.latitude;
       const longitude = firstView.longitude;
 
-      // Detect source type from previousPage
-      let sourceType = 'direct';
-      if (firstView.previousPage) {
+      // Get source type from stored data, or fall back to detection
+      let sourceType = firstView.sourceType || 'direct';
+      const source = firstView.source || null;
+      
+      // If no sourceType stored, try to detect from previousPage (legacy fallback)
+      if (!firstView.sourceType && firstView.previousPage) {
         const prevPage = firstView.previousPage.toLowerCase();
         if (prevPage.includes('verify') || prevPage.includes('qr')) {
           sourceType = 'qr';
@@ -632,6 +636,7 @@ export async function getAllSessions(limitCount: number = 100): Promise<SessionM
         userAgent,
         deviceType,
         sourceType,
+        source,
         latitude,
         longitude,
       });

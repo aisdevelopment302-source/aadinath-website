@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/lib/firebase';
 
 export default function PageTracker() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const trackPageView = async () => {
@@ -31,11 +32,39 @@ export default function PageTracker() {
           sessionStorage.setItem('currentPage', pathname || '/');
         }
 
+        // Get source from URL params (e.g., ?source=QR_BATCH_001)
+        // Once captured, store in sessionStorage so all pages in session have it
+        let source: string | null = searchParams.get('source');
+        if (typeof window !== 'undefined') {
+          if (source) {
+            // New source in URL - store it for the session
+            sessionStorage.setItem('trafficSource', source);
+          } else {
+            // Check if we have a stored source from earlier in the session
+            source = sessionStorage.getItem('trafficSource');
+          }
+        }
+
+        // Determine source type based on source param or referrer
+        let sourceType = 'direct';
+        if (source) {
+          sourceType = 'qr'; // If source param exists, it's from QR code
+        } else if (typeof document !== 'undefined' && document.referrer) {
+          const referrer = document.referrer.toLowerCase();
+          if (referrer.includes('google') || referrer.includes('bing') || referrer.includes('yahoo')) {
+            sourceType = 'organic';
+          } else if (referrer.includes('facebook') || referrer.includes('twitter') || referrer.includes('linkedin')) {
+            sourceType = 'social';
+          } else if (!referrer.includes(window.location.hostname)) {
+            sourceType = 'referral';
+          }
+        }
+
         // Detect device type
         const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
         const deviceType = detectDeviceType(userAgent);
 
-        // Get location data from ipapi.co
+        // Get location data via our API route
         const locationData = await getLocationFromIP();
 
         // Prepare tracking data
@@ -51,6 +80,8 @@ export default function PageTracker() {
           latitude: locationData.latitude || null,
           longitude: locationData.longitude || null,
           deviceType,
+          source: source || null,      // The actual source param (e.g., "QR_BATCH_001")
+          sourceType,                   // Category: qr, direct, organic, social, referral
         };
 
         const pageViewsRef = collection(db, 'page_views');
@@ -61,7 +92,7 @@ export default function PageTracker() {
     };
 
     trackPageView();
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   return null;
 }
