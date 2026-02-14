@@ -2,11 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get client IP from request headers
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 
-               request.headers.get('x-real-ip') || 
-               request.ip ||
-               'unknown';
 
     // Fetch geolocation from ipapi.co (server-side, no CORS issues)
     const response = await fetch('https://ipapi.co/json/', {
