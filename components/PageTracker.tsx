@@ -126,18 +126,18 @@ async function getLocationFromIP(): Promise<{
   longitude: number | null;
 }> {
   try {
-    const response = await fetch('/api/geolocation');
+    const response = await fetch('https://ipapi.co/json/');
     const data = await response.json();
 
     return {
-      userLocation: data.userLocation,
-      country: data.country || '',
+      userLocation: data.city && data.region ? `${data.city}, ${data.region}` : data.city || data.region || 'unknown',
+      country: data.country_name || '',
       city: data.city || '',
       latitude: data.latitude || null,
       longitude: data.longitude || null,
     };
   } catch (error) {
-    console.error('Error getting location from geolocation API:', error);
+    console.error('Error getting location from IP:', error);
     return {
       userLocation: 'unknown',
       country: '',
