@@ -3,10 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
-import { v4 as uuidv4 } from 'uuid'
-import { db } from '@/lib/firebase'
-import { getUserLocationFromIP, trackWhatsAppClick } from '@/lib/analytics'
+import { getTrafficSource, rememberTrafficSource, trackScan, trackWhatsAppClick } from '@/lib/analytics'
 import CustomerDataForm from '@/components/CustomerDataForm'
 
 export default function VerifyContent() {
@@ -16,53 +13,13 @@ export default function VerifyContent() {
   useEffect(() => {
     setMounted(true)
 
-    const source = searchParams.get('source') || 'UNKNOWN'
-    const product = searchParams.get('product') || 'UNKNOWN'
+    const source = searchParams.get('source') || ''
+    const product = searchParams.get('product') || ''
 
-    const trackScanEvent = async () => {
-      try {
-        // Get or create sessionId (same logic as PageTracker)
-        let sessionId = ''
-        if (typeof window !== 'undefined') {
-          sessionId = localStorage.getItem('sessionId') || uuidv4()
-          localStorage.setItem('sessionId', sessionId)
-          
-          // Store source in sessionStorage for PageTracker to pick up
-          if (source !== 'UNKNOWN') {
-            sessionStorage.setItem('trafficSource', source)
-          }
-        }
-
-        const { city = 'UNKNOWN', state = 'UNKNOWN', country = 'UNKNOWN' } =
-          (await getUserLocationFromIP()) || {}
-
-        const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : ''
-        const isMobile = /Mobile|Android|iPhone/i.test(userAgent)
-        const deviceType = isMobile ? 'mobile' : 'desktop'
-        const referrer = typeof document !== 'undefined' ? document.referrer : ''
-
-        const scanEventsRef = collection(db, 'scan_events')
-
-        await addDoc(scanEventsRef, {
-          sessionId,  // Now linked to page_views!
-          source,
-          product,
-          city,
-          state,
-          country,
-          deviceType,
-          userAgent,
-          referrer,
-          timestamp: serverTimestamp(),
-        })
-      } catch (error) {
-        // Swallow errors to keep tracking silent for the user
-        console.error('Failed to log scan event', error)
-      }
-    }
-
-    // Fire and forget tracking; do not block rendering
-    trackScanEvent()
+    // Store the QR source for the page tracker, then log the scan (fire and forget;
+    // location and device are added on the server)
+    if (source) rememberTrafficSource(source)
+    trackScan({ source, product, referrer: document.referrer })
   }, [])
 
   // Only render after hydration to avoid mismatch
@@ -159,11 +116,7 @@ export default function VerifyContent() {
               href="https://wa.me/919825207616"
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => {
-                const sessionId = typeof window !== 'undefined' ? localStorage.getItem('sessionId') || '' : '';
-                const source = typeof window !== 'undefined' ? sessionStorage.getItem('trafficSource') || '' : '';
-                trackWhatsAppClick(sessionId, source);
-              }}
+              onClick={() => trackWhatsAppClick(getTrafficSource())}
               className="w-full inline-block text-center bg-green-500 hover:bg-green-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-colors"
             >
               Contact on WhatsApp

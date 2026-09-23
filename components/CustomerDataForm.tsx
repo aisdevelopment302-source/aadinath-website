@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { trackCustomerSubmission, getUserLocationFromIP, trackFormInteraction } from '@/lib/analytics'
+import { submitLead, trackFormInteraction, getTrafficSource } from '@/lib/analytics'
 
 interface CustomerDataFormProps {
   onSuccess?: () => void
@@ -10,25 +10,15 @@ interface CustomerDataFormProps {
 export default function CustomerDataForm({ onSuccess }: CustomerDataFormProps) {
   const [isOpen, setIsOpen] = useState(false)
   
-  // Get sessionId helper
-  const getSessionId = () => {
-    return typeof window !== 'undefined' ? localStorage.getItem('sessionId') || '' : '';
-  };
-  
-  // Get source helper
-  const getSource = () => {
-    return typeof window !== 'undefined' ? sessionStorage.getItem('trafficSource') || '' : '';
-  };
-  
   const handleFormOpen = () => {
-    setIsOpen(true);
-    trackFormInteraction('form_open', getSessionId(), getSource());
-  };
-  
+    setIsOpen(true)
+    trackFormInteraction('form_open', getTrafficSource())
+  }
+
   const handleFormSkip = () => {
-    setIsOpen(false);
-    trackFormInteraction('form_skip', getSessionId(), getSource());
-  };
+    setIsOpen(false)
+    trackFormInteraction('form_skip', getTrafficSource())
+  }
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -54,21 +44,11 @@ export default function CustomerDataForm({ onSuccess }: CustomerDataFormProps) {
     setError('')
 
     try {
-      // Get user location
-      const location = await getUserLocationFromIP()
-
-      // Get sessionId from localStorage
-      const sessionId = typeof window !== 'undefined' ? localStorage.getItem('sessionId') || '' : ''
-
-      // Submit to Firebase
-      const result = await trackCustomerSubmission({
-        ...formData,
-        city: formData.city || location.city,
-        state: formData.state || location.state,
-        country: location.country,
-      }, sessionId)
+      // City/state left blank are filled on the server from the visitor's approximate location
+      const result = await submitLead(formData)
 
       if (result.success) {
+        trackFormInteraction('form_submit', getTrafficSource())
         setSubmitted(true)
         setFormData({
           name: '',
@@ -82,7 +62,7 @@ export default function CustomerDataForm({ onSuccess }: CustomerDataFormProps) {
         setTimeout(() => setIsOpen(false), 2000)
         onSuccess?.()
       } else {
-        setError('Failed to submit. Please try again.')
+        setError(result.error || 'Failed to submit. Please try again.')
       }
     } catch (err) {
       setError('An error occurred. Please try again.')

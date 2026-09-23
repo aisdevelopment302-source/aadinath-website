@@ -1,212 +1,100 @@
-import { db } from './firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+// Browser-side tracking. Everything goes to our own /api/track route, which
+// stores it in the mill's database; nothing is sent to third parties.
 
-/**
- * Track verification page scan
- * Called when user visits /verify page with a QR code batch ID
- */
-export async function trackVerificationScan(
-  batchId: string,
-  sessionId: string,
-  userLocation?: string,
-  locationData?: {
-    city?: string;
-    country?: string;
-    latitude?: number;
-    longitude?: number;
-  }
-) {
-  try {
-    const docData: Record<string, any> = {
-      batchId,
-      sessionId,
-      pageUrl: '/verify',
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-      userLocation: userLocation || locationData?.city || 'unknown',
-      timestamp: serverTimestamp(),
-      type: 'verification_scan',
-    };
+const SESSION_KEY = 'sessionId'
+const SOURCE_KEY = 'trafficSource'
 
-    // Only include location fields if they have values
-    if (locationData?.city) docData.city = locationData.city;
-    if (locationData?.country) docData.country = locationData.country;
-    if (locationData?.latitude !== undefined) docData.latitude = locationData.latitude;
-    if (locationData?.longitude !== undefined) docData.longitude = locationData.longitude;
-
-    await addDoc(collection(db, 'scan_events'), docData);
-  } catch (error) {
-    console.error('Error tracking verification scan:', error);
-  }
+function newId(): string {
+  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`
 }
 
-/**
- * Track customer data submission from verification page
- */
-export async function trackCustomerSubmission(
-  data: {
-    name?: string;
-    email?: string;
-    phone?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-    useCase?: string;
-    quantityNeeded?: string;
-    batchId?: string;
-  },
-  sessionId: string,
-  scanEventId?: string,
-  timeFromScanToSubmit?: number
-) {
+/** One id per browser, kept across visits, so a visitor's pages and scans link up. */
+export function getSessionId(): string {
+  if (typeof window === 'undefined') return ''
   try {
-    // Filter out undefined and empty string values from data
-    const cleanData = Object.fromEntries(
-      Object.entries(data).filter(([, value]) => value !== undefined && value !== '')
-    );
-
-    // Build document object, filtering out undefined values
-    const docData: Record<string, any> = {
-      ...cleanData,
-      sessionId,
-      submittedAt: serverTimestamp(),
-      source: 'verification_page',
-    };
-
-    // Only include scanEventId if it's provided and not empty
-    if (scanEventId) {
-      docData.scanEventId = scanEventId;
+    let id = localStorage.getItem(SESSION_KEY)
+    if (!id) {
+      id = newId()
+      localStorage.setItem(SESSION_KEY, id)
     }
-
-    // Only include timeFromScanToSubmit if it's provided
-    if (timeFromScanToSubmit !== undefined) {
-      docData.timeFromScanToSubmit = timeFromScanToSubmit;
-    }
-
-    await addDoc(collection(db, 'customer_data'), docData);
-    return { success: true };
-  } catch (error) {
-    console.error('Error tracking customer submission:', error);
-    return { success: false, error };
+    return id
+  } catch {
+    return ''
   }
 }
 
-/**
- * Track page views (generic)
- */
-export async function trackPageView(
-  pageName: string,
-  customData?: Record<string, any> & {
-    sessionId?: string;
-    previousPage?: string;
-    currentPage?: string;
-    userLocation?: string;
-    city?: string;
-    country?: string;
-    latitude?: number;
-    longitude?: number;
-    deviceType?: string;
-  }
-) {
+/** The ?source= this browser session arrived with (e.g. "qr"), if any. */
+export function getTrafficSource(): string {
+  if (typeof window === 'undefined') return ''
   try {
-    // Filter out undefined and empty string values from customData
-    const cleanData = customData
-      ? Object.fromEntries(
-          Object.entries(customData).filter(([, value]) => value !== undefined && value !== '')
-        )
-      : {};
-
-    await addDoc(collection(db, 'page_views'), {
-      pageName,
-      timestamp: serverTimestamp(),
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-      ...cleanData,
-    });
-  } catch (error) {
-    console.error('Error tracking page view:', error);
+    return sessionStorage.getItem(SOURCE_KEY) || ''
+  } catch {
+    return ''
   }
 }
 
-/**
- * Track WhatsApp button click
- */
-export async function trackWhatsAppClick(sessionId?: string, source?: string) {
+export function rememberTrafficSource(source: string) {
   try {
-    const docData: Record<string, any> = {
-      type: 'whatsapp_click',
-      timestamp: serverTimestamp(),
-      page: '/verify',
-    };
-    
-    if (sessionId) docData.sessionId = sessionId;
-    if (source) docData.source = source;
-    
-    await addDoc(collection(db, 'engagement_events'), docData);
-  } catch (error) {
-    console.error('Error tracking WhatsApp click:', error);
+    sessionStorage.setItem(SOURCE_KEY, source)
+  } catch {
+    // storage blocked: the source is simply not carried to later pages
   }
 }
 
-/**
- * Track form interactions (open, submit, skip)
- */
-export async function trackFormInteraction(
-  action: 'form_open' | 'form_submit' | 'form_skip',
-  sessionId?: string,
-  source?: string
-) {
-  try {
-    const docData: Record<string, any> = {
-      type: action,
-      timestamp: serverTimestamp(),
-      page: '/verify',
-    };
-    
-    if (sessionId) docData.sessionId = sessionId;
-    if (source) docData.source = source;
-    
-    await addDoc(collection(db, 'engagement_events'), docData);
-  } catch (error) {
-    console.error('Error tracking form interaction:', error);
-  }
+function send(payload: Record<string, unknown>): Promise<Response> {
+  return fetch('/api/track', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    keepalive: true,
+  })
 }
 
-/**
- * Track contact form submission
- */
-export async function trackContactFormSubmission(data: Record<string, any>) {
-  try {
-    await addDoc(collection(db, 'contact_submissions'), {
-      ...data,
-      submittedAt: serverTimestamp(),
-    });
-  } catch (error) {
-    console.error('Error tracking contact submission:', error);
-  }
+/** Fire and forget: analytics must never disturb the visitor. */
+function track(payload: Record<string, unknown>) {
+  send({ sessionId: getSessionId(), ...payload }).catch(() => {})
 }
 
-/**
- * Get user's approximate location from IP (requires backend)
- * For now, we'll use a simple approach with a service
- */
-export async function getUserLocationFromIP(): Promise<{
-  city?: string;
-  state?: string;
-  country?: string;
-  latitude?: number;
-  longitude?: number;
-}> {
+export function trackPageView(fields: {
+  page: string
+  previousPage?: string | null
+  source?: string | null
+  sourceType: string
+  deviceType: string
+}) {
+  track({ kind: 'page_view', ...fields })
+}
+
+export function trackScan(fields: { source: string; product: string; referrer?: string }) {
+  track({ kind: 'scan', ...fields })
+}
+
+export function trackWhatsAppClick(source?: string) {
+  track({ kind: 'event', type: 'whatsapp_click', page: window.location.pathname, source })
+}
+
+export function trackFormInteraction(action: 'form_open' | 'form_submit' | 'form_skip', source?: string) {
+  track({ kind: 'event', type: action, page: window.location.pathname, source })
+}
+
+/** The verification-page form. Awaited, so the visitor learns if it failed. */
+export async function submitLead(data: {
+  name?: string
+  phone?: string
+  email?: string
+  city?: string
+  state?: string
+  useCase?: string
+  quantityNeeded?: string
+}): Promise<{ success: boolean; error?: string }> {
   try {
-    const response = await fetch('https://ipapi.co/json/');
-    const data = await response.json();
-    return {
-      city: data.city,
-      state: data.region,
-      country: data.country_name,
-      latitude: data.latitude,
-      longitude: data.longitude,
-    };
-  } catch (error) {
-    console.error('Error getting location from IP:', error);
-    return {};
+    const res = await send({ kind: 'lead', sessionId: getSessionId(), source: 'verification_page', ...data })
+    if (res.ok) return { success: true }
+    const body = await res.json().catch(() => ({}))
+    return { success: false, error: typeof body.error === 'string' ? body.error : undefined }
+  } catch {
+    return { success: false }
   }
 }
