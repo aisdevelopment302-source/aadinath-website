@@ -65,8 +65,8 @@ export default function VerifyContent() {
             You are viewing a verified <strong>MS Angle Bar</strong> manufactured by Aadinath Industries.
           </p>
           <p className="text-xs text-gray-400 mt-3">
-            We ask for your location only to learn where our steel reaches. It is saved to about 100 m and
-            never shared. Allowing it is optional.
+            We ask for your location only to learn where our steel reaches. It is never shared. Allowing it
+            is optional.
           </p>
 
           <div className="w-16 h-0.5 bg-gray-200 my-5" />
@@ -138,28 +138,50 @@ export default function VerifyContent() {
   )
 }
 
-/** Asks the phone where it is (the owner chose to ask on every scan) and records the
- * answer. Coordinates are rounded to 3 decimals (~110 m) before they leave the phone.
- * If the visitor never answers the prompt, nothing is recorded. */
+// A fix this good is sent at once; otherwise the best one after MAX_WAIT_MS.
+const GOOD_ENOUGH_M = 10
+const MAX_WAIT_MS = 10_000
+
+/** Asks the phone where it is (the owner chose to ask on every scan, at full
+ * precision) and records the answer once. GPS sharpens over the first seconds,
+ * so after the first fix it keeps watching for up to MAX_WAIT_MS and sends the
+ * most accurate one, or the best so far if the visitor leaves the page. If the
+ * visitor never answers the prompt, nothing is recorded. */
 function askLocation(scanId: string) {
   if (!('geolocation' in navigator)) {
     trackScanLocation(scanId, { status: 'unsupported' })
     return
   }
-  const round = (n: number) => Math.round(n * 1000) / 1000
-  navigator.geolocation.getCurrentPosition(
-    ({ coords }) =>
-      trackScanLocation(scanId, {
-        status: 'granted',
-        latitude: round(coords.latitude),
-        longitude: round(coords.longitude),
-        accuracy: Math.round(coords.accuracy),
-      }),
-    (error) =>
-      trackScanLocation(scanId, {
-        status:
-          error.code === error.PERMISSION_DENIED ? 'denied' : error.code === error.TIMEOUT ? 'timeout' : 'unavailable',
-      }),
-    { enableHighAccuracy: true, timeout: 20_000, maximumAge: 5 * 60_000 },
+  let best: GeolocationCoordinates | null = null
+  let done = false
+  let timer: ReturnType<typeof setTimeout> | undefined
+
+  const finish = (fields: Parameters<typeof trackScanLocation>[1]) => {
+    if (done) return
+    done = true
+    navigator.geolocation.clearWatch(watch)
+    clearTimeout(timer)
+    window.removeEventListener('pagehide', sendBest)
+    trackScanLocation(scanId, fields)
+  }
+  function sendBest() {
+    if (best) {
+      finish({ status: 'granted', latitude: best.latitude, longitude: best.longitude, accuracy: Math.round(best.accuracy) })
+    }
+  }
+
+  const watch = navigator.geolocation.watchPosition(
+    ({ coords }) => {
+      if (!best || coords.accuracy < best.accuracy) best = coords
+      if (coords.accuracy <= GOOD_ENOUGH_M) sendBest()
+      else if (!timer) timer = setTimeout(sendBest, MAX_WAIT_MS)
+    },
+    (error) => {
+      if (best) return // keep the fix we have; the timer sends it
+      if (error.code === error.PERMISSION_DENIED) finish({ status: 'denied' })
+      else finish({ status: error.code === error.TIMEOUT ? 'timeout' : 'unavailable' })
+    },
+    { enableHighAccuracy: true, maximumAge: 0, timeout: 30_000 },
   )
+  window.addEventListener('pagehide', sendBest)
 }

@@ -108,11 +108,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ id })
       }
       case 'scan_location': {
-        // The phone's answer to the location prompt after a scan. Kept to 3 decimals (~110 m).
+        // The phone's answer to the location prompt after a scan, at full precision (6 decimals).
         const scanId = str(body, 'scanId', 36)
         const status = oneOf(body, 'status', LOCATION_STATUSES)
-        const latitude = num(body, 'latitude', 90, 3)
-        const longitude = num(body, 'longitude', 180, 3)
+        const latitude = num(body, 'latitude', 90, 6)
+        const longitude = num(body, 'longitude', 180, 6)
         const accuracy = num(body, 'accuracy', 1_000_000, 0)
         const granted = status === 'granted'
         if (!scanId || !UUID.test(scanId) || !status || (granted && (latitude === null || longitude === null))) {
