@@ -1,8 +1,14 @@
 import 'server-only'
 
-// Approximate visitor location from Vercel's edge headers. This replaces the
+// Approximate visitor location from the request headers. This replaces the
 // ipapi.co lookups, so visitor IPs are no longer sent to a third party and there
 // is no daily quota to run out of. Outside Vercel (local dev) the headers are absent.
+//
+// The domain is proxied through Cloudflare, so Vercel sees Cloudflare's server,
+// not the visitor, and its x-vercel-ip-* headers name that server's city
+// (Singapore, Marseille, ...). When a request came through Cloudflare we use only
+// Cloudflare's headers: cf-ipcountry is always sent; city, region and coordinates
+// need the Managed Transform "Add visitor location headers" to be switched on.
 
 // ISO 3166-2:IN subdivision codes → state / UT names, as Vercel reports them.
 const INDIAN_STATES: Record<string, string> = {
@@ -42,21 +48,27 @@ export type VisitorLocation = {
 }
 
 export function visitorLocation(headers: Headers): VisitorLocation {
-  const countryCode = header(headers, 'x-vercel-ip-country')
-  const regionCode = header(headers, 'x-vercel-ip-country-region')
+  const viaCloudflare = headers.has('cf-ray')
+  const countryCode = header(headers, viaCloudflare ? 'cf-ipcountry' : 'x-vercel-ip-country')
+  const regionCode = header(headers, viaCloudflare ? 'cf-region-code' : 'x-vercel-ip-country-region')
+  // Cloudflare's "XX" / "T1" mean unknown / Tor
+  const knownCountry = countryCode && !['XX', 'T1'].includes(countryCode) ? countryCode : null
   let country: string | null = null
-  if (countryCode) {
+  if (knownCountry) {
     try {
-      country = countryNames.of(countryCode) ?? countryCode
+      country = countryNames.of(knownCountry) ?? knownCountry
     } catch {
-      country = countryCode
+      country = knownCountry
     }
   }
+  // Cloudflare also sends the region's name; Vercel sends only the code
+  const region = (viaCloudflare ? header(headers, 'cf-region') : null)
+    ?? (regionCode ? (knownCountry === 'IN' ? INDIAN_STATES[regionCode] ?? regionCode : regionCode) : null)
   return {
-    city: header(headers, 'x-vercel-ip-city'),
-    region: regionCode ? (countryCode === 'IN' ? INDIAN_STATES[regionCode] ?? regionCode : regionCode) : null,
+    city: header(headers, viaCloudflare ? 'cf-ipcity' : 'x-vercel-ip-city'),
+    region,
     country,
-    latitude: coordinate(headers.get('x-vercel-ip-latitude'), 90),
-    longitude: coordinate(headers.get('x-vercel-ip-longitude'), 180),
+    latitude: coordinate(headers.get(viaCloudflare ? 'cf-iplatitude' : 'x-vercel-ip-latitude'), 90),
+    longitude: coordinate(headers.get(viaCloudflare ? 'cf-iplongitude' : 'x-vercel-ip-longitude'), 180),
   }
 }

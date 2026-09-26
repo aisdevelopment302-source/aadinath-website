@@ -16,10 +16,14 @@ export default function VerifyContent() {
     const source = searchParams.get('source') || ''
     const product = searchParams.get('product') || ''
 
-    // Store the QR source for the page tracker, then log the scan (fire and forget;
+    // Only a visit from a printed code (it carries ?source=) is a scan. A plain
+    // /verify visit is still recorded as a page view by the page tracker.
+    // Store the source for the page tracker, then log the scan (fire and forget;
     // location and device are added on the server)
-    if (source) rememberTrafficSource(source)
-    trackScan({ source, product, referrer: document.referrer })
+    if (source) {
+      rememberTrafficSource(source)
+      trackScan({ source, product, referrer: document.referrer })
+    }
   }, [])
 
   // Only render after hydration to avoid mismatch
