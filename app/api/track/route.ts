@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { visitorLocation } from '@/lib/geo'
@@ -7,8 +8,9 @@ import { visitorLocation } from '@/lib/geo'
 // location from Vercel's headers and inserts as role website_app (insert-only,
 // schema `website`). The ERP reads the data.
 //
-// Body: { kind: 'page_view' | 'scan' | 'event' | 'lead', ...fields }
-// Returns 204 on success. Analytics callers ignore failures; the lead form shows them.
+// Body: { kind: 'page_view' | 'scan' | 'scan_location' | 'event' | 'lead', ...fields }
+// Returns 204 on success; a scan returns 200 { id } so the page can send the
+// phone's location for it. Analytics callers ignore failures; the lead form shows them.
 
 export const runtime = 'nodejs'
 
@@ -16,6 +18,8 @@ const MAX_BODY = 4096
 const EVENT_TYPES = new Set(['whatsapp_click', 'form_open', 'form_skip', 'form_submit'])
 const SOURCE_TYPES = new Set(['qr', 'organic', 'social', 'referral', 'direct'])
 const DEVICE_TYPES = new Set(['mobile', 'desktop'])
+const LOCATION_STATUSES = new Set(['granted', 'denied', 'unavailable', 'timeout', 'unsupported'])
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 type Body = Record<string, unknown>
 
@@ -34,6 +38,14 @@ function oneOf(body: Body, key: string, allowed: Set<string>): string | null {
 function path(body: Body, key: string): string | null {
   const value = str(body, key, 300)
   return value && value.startsWith('/') ? value : null
+}
+
+/** A finite number within ±limit, rounded to `decimals` places. */
+function num(body: Body, key: string, limit: number, decimals: number): number | null {
+  const value = body[key]
+  if (typeof value !== 'number' || !Number.isFinite(value) || Math.abs(value) > limit) return null
+  const f = 10 ** decimals
+  return Math.round(value * f) / f
 }
 
 function sameSite(req: NextRequest): boolean {
@@ -86,12 +98,30 @@ export async function POST(req: NextRequest) {
         break
       }
       case 'scan': {
+        const id = randomUUID()
         await sql`
           insert into website.scan_events
-            (session_id, source, product, device_type, user_agent, referrer, city, region, country)
+            (id, session_id, source, product, device_type, user_agent, referrer, city, region, country)
           values
-            (${sessionId}, ${str(body, 'source', 100)}, ${str(body, 'product', 100)}, ${deviceFrom(userAgent)},
+            (${id}, ${sessionId}, ${str(body, 'source', 100)}, ${str(body, 'product', 100)}, ${deviceFrom(userAgent)},
              ${userAgent}, ${str(body, 'referrer', 500)}, ${where.city}, ${where.region}, ${where.country})`
+        return NextResponse.json({ id })
+      }
+      case 'scan_location': {
+        // The phone's answer to the location prompt after a scan. Kept to 3 decimals (~110 m).
+        const scanId = str(body, 'scanId', 36)
+        const status = oneOf(body, 'status', LOCATION_STATUSES)
+        const latitude = num(body, 'latitude', 90, 3)
+        const longitude = num(body, 'longitude', 180, 3)
+        const accuracy = num(body, 'accuracy', 1_000_000, 0)
+        const granted = status === 'granted'
+        if (!scanId || !UUID.test(scanId) || !status || (granted && (latitude === null || longitude === null))) {
+          return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+        }
+        await sql`
+          insert into website.scan_locations (scan_id, status, latitude, longitude, accuracy_m)
+          values (${scanId}, ${status}, ${granted ? latitude : null}, ${granted ? longitude : null},
+                  ${granted ? accuracy : null})`
         break
       }
       case 'event': {
@@ -114,12 +144,16 @@ export async function POST(req: NextRequest) {
         if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
           return NextResponse.json({ error: 'Please check the email address.' }, { status: 400 })
         }
+        const pincode = str(body, 'pincode', 10)
+        if (pincode && !/^[1-9][0-9]{5}$/.test(pincode)) {
+          return NextResponse.json({ error: 'Please check the pincode (6 digits).' }, { status: 400 })
+        }
         await sql`
           insert into website.leads
-            (name, phone, email, city, state, country, use_case, quantity_needed, session_id, source)
+            (name, phone, email, city, state, country, pincode, use_case, quantity_needed, session_id, source)
           values
             (${str(body, 'name', 120)}, ${phone}, ${email}, ${str(body, 'city', 100) ?? where.city},
-             ${str(body, 'state', 100) ?? where.region}, ${where.country}, ${str(body, 'useCase', 100)},
+             ${str(body, 'state', 100) ?? where.region}, ${where.country}, ${pincode}, ${str(body, 'useCase', 100)},
              ${str(body, 'quantityNeeded', 100)}, ${sessionId}, ${str(body, 'source', 100) ?? 'verification_page'})`
         break
       }

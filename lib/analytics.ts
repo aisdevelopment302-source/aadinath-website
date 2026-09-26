@@ -67,8 +67,26 @@ export function trackPageView(fields: {
   track({ kind: 'page_view', ...fields })
 }
 
-export function trackScan(fields: { source: string; product: string; referrer?: string }) {
-  track({ kind: 'scan', ...fields })
+/** Records a QR scan; resolves to the scan's id (null on failure) so its location can follow. */
+export async function trackScan(fields: { source: string; product: string; referrer?: string }): Promise<string | null> {
+  try {
+    const res = await send({ kind: 'scan', sessionId: getSessionId(), ...fields })
+    if (!res.ok) return null
+    const body = await res.json()
+    return typeof body.id === 'string' ? body.id : null
+  } catch {
+    return null
+  }
+}
+
+export type LocationStatus = 'granted' | 'denied' | 'unavailable' | 'timeout' | 'unsupported'
+
+/** The phone's answer to the location prompt for one scan. */
+export function trackScanLocation(
+  scanId: string,
+  fields: { status: LocationStatus; latitude?: number; longitude?: number; accuracy?: number },
+) {
+  track({ kind: 'scan_location', scanId, ...fields })
 }
 
 export function trackWhatsAppClick(source?: string) {
@@ -86,6 +104,7 @@ export async function submitLead(data: {
   email?: string
   city?: string
   state?: string
+  pincode?: string
   useCase?: string
   quantityNeeded?: string
 }): Promise<{ success: boolean; error?: string }> {

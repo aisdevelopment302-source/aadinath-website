@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
-import { getTrafficSource, rememberTrafficSource, trackScan, trackWhatsAppClick } from '@/lib/analytics'
+import { getTrafficSource, rememberTrafficSource, trackScan, trackScanLocation, trackWhatsAppClick } from '@/lib/analytics'
 import CustomerDataForm from '@/components/CustomerDataForm'
 
 export default function VerifyContent() {
@@ -18,11 +18,13 @@ export default function VerifyContent() {
 
     // Only a visit from a printed code (it carries ?source=) is a scan. A plain
     // /verify visit is still recorded as a page view by the page tracker.
-    // Store the source for the page tracker, then log the scan (fire and forget;
-    // location and device are added on the server)
+    // Store the source for the page tracker, log the scan (approximate location
+    // and device are added on the server), then ask the phone where it is.
     if (source) {
       rememberTrafficSource(source)
-      trackScan({ source, product, referrer: document.referrer })
+      trackScan({ source, product, referrer: document.referrer }).then((scanId) => {
+        if (scanId) askLocation(scanId)
+      })
     }
   }, [])
 
@@ -61,6 +63,10 @@ export default function VerifyContent() {
           </p>
           <p className="text-gray-600 mt-2">
             You are viewing a verified <strong>MS Angle Bar</strong> manufactured by Aadinath Industries.
+          </p>
+          <p className="text-xs text-gray-400 mt-3">
+            We ask for your location only to learn where our steel reaches. It is saved to about 100 m and
+            never shared. Allowing it is optional.
           </p>
 
           <div className="w-16 h-0.5 bg-gray-200 my-5" />
@@ -129,5 +135,31 @@ export default function VerifyContent() {
         </div>
       </div>
     </div>
+  )
+}
+
+/** Asks the phone where it is (the owner chose to ask on every scan) and records the
+ * answer. Coordinates are rounded to 3 decimals (~110 m) before they leave the phone.
+ * If the visitor never answers the prompt, nothing is recorded. */
+function askLocation(scanId: string) {
+  if (!('geolocation' in navigator)) {
+    trackScanLocation(scanId, { status: 'unsupported' })
+    return
+  }
+  const round = (n: number) => Math.round(n * 1000) / 1000
+  navigator.geolocation.getCurrentPosition(
+    ({ coords }) =>
+      trackScanLocation(scanId, {
+        status: 'granted',
+        latitude: round(coords.latitude),
+        longitude: round(coords.longitude),
+        accuracy: Math.round(coords.accuracy),
+      }),
+    (error) =>
+      trackScanLocation(scanId, {
+        status:
+          error.code === error.PERMISSION_DENIED ? 'denied' : error.code === error.TIMEOUT ? 'timeout' : 'unavailable',
+      }),
+    { enableHighAccuracy: true, timeout: 20_000, maximumAge: 5 * 60_000 },
   )
 }

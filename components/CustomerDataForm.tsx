@@ -29,6 +29,7 @@ export default function CustomerDataForm({ onSuccess }: CustomerDataFormProps) {
     phone: '',
     city: '',
     state: '',
+    pincode: '',
     useCase: '',
     quantityNeeded: '',
   })
@@ -56,6 +57,7 @@ export default function CustomerDataForm({ onSuccess }: CustomerDataFormProps) {
           phone: '',
           city: '',
           state: '',
+          pincode: '',
           useCase: '',
           quantityNeeded: '',
         })
@@ -141,6 +143,20 @@ export default function CustomerDataForm({ onSuccess }: CustomerDataFormProps) {
                   className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
+
+              <input
+                type="text"
+                name="pincode"
+                placeholder="Pincode"
+                inputMode="numeric"
+                autoComplete="postal-code"
+                maxLength={6}
+                pattern="[1-9][0-9]{5}"
+                title="6-digit pincode"
+                value={formData.pincode}
+                onChange={handleChange}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
 
               <select
                 name="useCase"
