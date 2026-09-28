@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { getTrafficSource, rememberTrafficSource, trackScan, trackScanLocation, trackWhatsAppClick } from '@/lib/analytics'
@@ -9,6 +9,8 @@ import CustomerDataForm from '@/components/CustomerDataForm'
 export default function VerifyContent() {
   const searchParams = useSearchParams()
   const [mounted, setMounted] = useState(false)
+  const [locationHelp, setLocationHelp] = useState<LocationHelp | null>(null)
+  const askAgain = useRef<() => void>(() => {})
 
   useEffect(() => {
     setMounted(true)
@@ -23,7 +25,7 @@ export default function VerifyContent() {
     if (source) {
       rememberTrafficSource(source)
       trackScan({ source, product, referrer: document.referrer }).then((scanId) => {
-        if (scanId) askLocation(scanId)
+        if (scanId) askAgain.current = locateScan(scanId, setLocationHelp)
       })
     }
   }, [])
@@ -68,6 +70,22 @@ export default function VerifyContent() {
             We ask for your location only to learn where our steel reaches. It is never shared. Allowing it
             is optional.
           </p>
+          {locationHelp === 'ask' && (
+            <button
+              type="button"
+              onClick={() => askAgain.current()}
+              className="mt-3 text-sm font-semibold text-orange-600 border border-orange-300 rounded-lg px-4 py-2 hover:bg-orange-50"
+            >
+              📍 Share my location
+            </button>
+          )}
+          {locationHelp === 'blocked' && (
+            <p className="text-xs text-gray-500 mt-3">
+              Your browser has blocked location for this website. To allow it, tap the icon left of the web
+              address, then Permissions → Location → Allow, and reload. If a scanner app opened this page,
+              open it in Chrome instead.
+            </p>
+          )}
 
           <div className="w-16 h-0.5 bg-gray-200 my-5" />
 
@@ -141,47 +159,82 @@ export default function VerifyContent() {
 // A fix this good is sent at once; otherwise the best one after MAX_WAIT_MS.
 const GOOD_ENOUGH_M = 10
 const MAX_WAIT_MS = 10_000
+// A refusal faster than this came from the browser, not the visitor: no prompt was shown.
+const NO_PROMPT_MS = 1_500
+
+/** 'ask': the browser refused without showing a prompt, which Chrome on Android
+ * does to requests a page makes on its own; a tap usually gets the prompt.
+ * 'blocked': the browser refuses this site outright (blocked earlier, or an app's
+ * built-in browser), so only its settings can change that. */
+type LocationHelp = 'ask' | 'blocked'
 
 /** Asks the phone where it is (the owner chose to ask on every scan, at full
  * precision) and records the answer once. GPS sharpens over the first seconds,
  * so after the first fix it keeps watching for up to MAX_WAIT_MS and sends the
  * most accurate one, or the best so far if the visitor leaves the page. If the
- * visitor never answers the prompt, nothing is recorded. */
-function askLocation(scanId: string) {
+ * browser refuses without asking, the refusal is held until the visitor leaves,
+ * and the returned function asks again from their tap. If the visitor never
+ * answers the prompt, nothing is recorded. */
+function locateScan(scanId: string, setHelp: (help: LocationHelp | null) => void): () => void {
   if (!('geolocation' in navigator)) {
     trackScanLocation(scanId, { status: 'unsupported' })
-    return
+    return () => {}
   }
-  let best: GeolocationCoordinates | null = null
-  let done = false
-  let timer: ReturnType<typeof setTimeout> | undefined
-
-  const finish = (fields: Parameters<typeof trackScanLocation>[1]) => {
-    if (done) return
-    done = true
-    navigator.geolocation.clearWatch(watch)
-    clearTimeout(timer)
-    window.removeEventListener('pagehide', sendBest)
+  let recorded = false
+  const record = (fields: Parameters<typeof trackScanLocation>[1]) => {
+    if (recorded) return
+    recorded = true
+    window.removeEventListener('pagehide', recordRefusal)
     trackScanLocation(scanId, fields)
   }
-  function sendBest() {
-    if (best) {
-      finish({ status: 'granted', latitude: best.latitude, longitude: best.longitude, accuracy: Math.round(best.accuracy) })
+  const recordRefusal = () => record({ status: 'denied' })
+
+  const ask = (tapped: boolean) => {
+    const started = Date.now()
+    let best: GeolocationCoordinates | null = null
+    let stopped = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+
+    const stop = () => {
+      stopped = true
+      navigator.geolocation.clearWatch(watch)
+      clearTimeout(timer)
+      window.removeEventListener('pagehide', sendBest)
     }
+    function sendBest() {
+      if (!best || stopped) return
+      stop()
+      setHelp(null)
+      record({ status: 'granted', latitude: best.latitude, longitude: best.longitude, accuracy: Math.round(best.accuracy) })
+    }
+
+    const watch = navigator.geolocation.watchPosition(
+      ({ coords }) => {
+        if (!best || coords.accuracy < best.accuracy) best = coords
+        if (coords.accuracy <= GOOD_ENOUGH_M) sendBest()
+        else if (!timer) timer = setTimeout(sendBest, MAX_WAIT_MS)
+      },
+      async (error) => {
+        if (best || stopped) return // keep the fix we have; the timer sends it
+        stop()
+        if (error.code !== error.PERMISSION_DENIED) {
+          record({ status: error.code === error.TIMEOUT ? 'timeout' : 'unavailable' })
+        } else if (Date.now() - started >= NO_PROMPT_MS) {
+          setHelp(null) // the visitor saw the prompt and said no
+          record({ status: 'denied' })
+        } else {
+          window.addEventListener('pagehide', recordRefusal)
+          const state = await navigator.permissions?.query({ name: 'geolocation' }).then((s) => s.state, () => null)
+          if (!recorded) setHelp(tapped || state === 'denied' ? 'blocked' : 'ask')
+        }
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 30_000 },
+    )
+    window.addEventListener('pagehide', sendBest)
   }
 
-  const watch = navigator.geolocation.watchPosition(
-    ({ coords }) => {
-      if (!best || coords.accuracy < best.accuracy) best = coords
-      if (coords.accuracy <= GOOD_ENOUGH_M) sendBest()
-      else if (!timer) timer = setTimeout(sendBest, MAX_WAIT_MS)
-    },
-    (error) => {
-      if (best) return // keep the fix we have; the timer sends it
-      if (error.code === error.PERMISSION_DENIED) finish({ status: 'denied' })
-      else finish({ status: error.code === error.TIMEOUT ? 'timeout' : 'unavailable' })
-    },
-    { enableHighAccuracy: true, maximumAge: 0, timeout: 30_000 },
-  )
-  window.addEventListener('pagehide', sendBest)
+  ask(false)
+  return () => {
+    if (!recorded) ask(true)
+  }
 }
