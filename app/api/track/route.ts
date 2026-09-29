@@ -8,7 +8,7 @@ import { visitorLocation } from '@/lib/geo'
 // location from Vercel's headers and inserts as role website_app (insert-only,
 // schema `website`). The ERP reads the data.
 //
-// Body: { kind: 'page_view' | 'scan' | 'scan_location' | 'event' | 'lead', ...fields }
+// Body: { kind: 'page_view' | 'scan' | 'scan_location' | 'scan_answer' | 'event' | 'lead', ...fields }
 // Returns 204 on success; a scan returns 200 { id } so the page can send the
 // phone's location for it. Analytics callers ignore failures; the lead form shows them.
 
@@ -19,6 +19,12 @@ const EVENT_TYPES = new Set(['whatsapp_click', 'form_open', 'form_skip', 'form_s
 const SOURCE_TYPES = new Set(['qr', 'organic', 'social', 'referral', 'direct'])
 const DEVICE_TYPES = new Set(['mobile', 'desktop'])
 const LOCATION_STATUSES = new Set(['granted', 'denied', 'unavailable', 'timeout', 'unsupported'])
+// The one-tap questions after a scan, and the answers each allows (website.scan_answers).
+const SCAN_ANSWERS: Record<string, Set<string>> = {
+  end_use: new Set(['gate_grill', 'shed_truss', 'solar_structure', 'rack_shelf', 'machine_frame', 'tower', 'resale', 'other']),
+  rating: new Set(['good', 'bad']),
+  issue: new Set(['straightness', 'weight', 'rust', 'size', 'other']),
+}
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 type Body = Record<string, unknown>
@@ -122,6 +128,21 @@ export async function POST(req: NextRequest) {
           insert into website.scan_locations (scan_id, status, latitude, longitude, accuracy_m)
           values (${scanId}, ${status}, ${granted ? latitude : null}, ${granted ? longitude : null},
                   ${granted ? accuracy : null})`
+        break
+      }
+      case 'scan_answer': {
+        // A one-tap answer after a scan. The first answer to each question stands.
+        const scanId = str(body, 'scanId', 36)
+        const question = str(body, 'question', 20)
+        const allowed = question ? SCAN_ANSWERS[question] : undefined
+        const answer = allowed ? oneOf(body, 'answer', allowed) : null
+        if (!scanId || !UUID.test(scanId) || !answer) {
+          return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+        }
+        await sql`
+          insert into website.scan_answers (scan_id, question, answer)
+          values (${scanId}, ${question}, ${answer})
+          on conflict do nothing`
         break
       }
       case 'event': {

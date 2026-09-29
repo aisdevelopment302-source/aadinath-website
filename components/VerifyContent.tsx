@@ -3,14 +3,28 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
-import { getTrafficSource, rememberTrafficSource, trackScan, trackScanLocation, trackWhatsAppClick } from '@/lib/analytics'
+import {
+  getTrafficSource,
+  rememberTrafficSource,
+  trackScan,
+  trackScanAnswer,
+  trackScanLocation,
+  trackWhatsAppClick,
+  type ScanQuestion,
+} from '@/lib/analytics'
 import CustomerDataForm from '@/components/CustomerDataForm'
+import ScanQuestions, { END_USES, ISSUES, labelOf, type ScanAnswers } from '@/components/ScanQuestions'
+
+const WHATSAPP_NUMBER = '919825207616'
 
 export default function VerifyContent() {
   const searchParams = useSearchParams()
   const [mounted, setMounted] = useState(false)
   const [locationHelp, setLocationHelp] = useState<LocationHelp | null>(null)
   const askAgain = useRef<() => void>(() => {})
+  const [scanned, setScanned] = useState(false)
+  const scanId = useRef<Promise<string | null>>(Promise.resolve(null))
+  const [answers, setAnswers] = useState<ScanAnswers>({})
 
   useEffect(() => {
     setMounted(true)
@@ -24,11 +38,21 @@ export default function VerifyContent() {
     // and device are added on the server), then ask the phone where it is.
     if (source) {
       rememberTrafficSource(source)
-      trackScan({ source, product, referrer: document.referrer }).then((scanId) => {
-        if (scanId) askAgain.current = locateScan(scanId, setLocationHelp)
+      setScanned(true)
+      scanId.current = trackScan({ source, product, referrer: document.referrer })
+      scanId.current.then((id) => {
+        if (id) askAgain.current = locateScan(id, setLocationHelp)
       })
     }
   }, [])
+
+  // Answers are shown at once and sent when the scan's id arrives.
+  const onAnswer = (question: ScanQuestion, answer: string) => {
+    setAnswers((prev) => ({ ...prev, [question]: answer }))
+    scanId.current.then((id) => {
+      if (id) trackScanAnswer(id, question, answer)
+    })
+  }
 
   // Only render after hydration to avoid mismatch
   if (!mounted) {
@@ -89,6 +113,8 @@ export default function VerifyContent() {
 
           <div className="w-16 h-0.5 bg-gray-200 my-5" />
 
+          {scanned && <ScanQuestions answers={answers} onAnswer={onAnswer} />}
+
           {/* Quality Checks */}
           <div className="w-full bg-gray-50 rounded-xl p-4 mb-4">
             <p className="text-sm font-semibold text-gray-700 mb-3 text-left">Each product is produced under controlled rolling conditions to ensure:</p>
@@ -141,7 +167,7 @@ export default function VerifyContent() {
               For bulk supply, dealership, export enquiries, or feedback, please contact us directly.
             </p>
             <a
-              href="https://wa.me/919825207616"
+              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsAppMessage(answers))}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackWhatsAppClick(getTrafficSource())}
@@ -154,6 +180,18 @@ export default function VerifyContent() {
       </div>
     </div>
   )
+}
+
+/** The WhatsApp message is typed out for the visitor, with what they told us. */
+function whatsAppMessage(answers: ScanAnswers): string {
+  const lines = ['Hi, I scanned the QR code on an Aadinath MS Angle Bar.']
+  const use = labelOf(END_USES, answers.end_use)
+  if (use) lines.push(`I use it for: ${use}.`)
+  if (answers.rating === 'bad') {
+    const issue = labelOf(ISSUES, answers.issue)
+    lines.push(issue ? `Quality problem: ${issue}.` : 'I have a quality problem.')
+  }
+  return lines.join('\n')
 }
 
 // A fix this good is sent at once; otherwise the best one after MAX_WAIT_MS.

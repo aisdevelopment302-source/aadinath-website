@@ -89,6 +89,13 @@ export function trackScanLocation(
   track({ kind: 'scan_location', scanId, ...fields })
 }
 
+export type ScanQuestion = 'end_use' | 'rating' | 'issue'
+
+/** A visitor's one-tap answer to a question after a scan. */
+export function trackScanAnswer(scanId: string, question: ScanQuestion, answer: string) {
+  track({ kind: 'scan_answer', scanId, question, answer })
+}
+
 export function trackWhatsAppClick(source?: string) {
   track({ kind: 'event', type: 'whatsapp_click', page: window.location.pathname, source })
 }
