@@ -104,12 +104,15 @@ export async function POST(req: NextRequest) {
       }
       case 'scan': {
         const id = randomUUID()
+        // the server-side load this scan came from, when the page sent it
+        const loadId = str(body, 'loadId', 36)
         await sql`
           insert into website.scan_events
-            (id, session_id, source, product, device_type, user_agent, referrer, city, region, country)
+            (id, session_id, source, product, device_type, user_agent, referrer, city, region, country, load_id)
           values
             (${id}, ${sessionId}, ${str(body, 'source', 100)}, ${str(body, 'product', 100)}, ${deviceFrom(userAgent)},
-             ${userAgent}, ${str(body, 'referrer', 500)}, ${where.city}, ${where.region}, ${where.country})`
+             ${userAgent}, ${str(body, 'referrer', 500)}, ${where.city}, ${where.region}, ${where.country},
+             ${loadId && UUID.test(loadId) ? loadId : null})`
         return NextResponse.json({ id })
       }
       case 'scan_location': {

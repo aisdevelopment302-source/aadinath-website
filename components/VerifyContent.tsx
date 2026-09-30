@@ -17,7 +17,7 @@ import ScanQuestions, { ISSUES, labelOf, type ScanAnswers } from '@/components/S
 
 const WHATSAPP_NUMBER = '919825207616'
 
-export default function VerifyContent() {
+export default function VerifyContent({ loadId }: { loadId?: string }) {
   const searchParams = useSearchParams()
   const [mounted, setMounted] = useState(false)
   const [locationHelp, setLocationHelp] = useState<LocationHelp | null>(null)
@@ -39,7 +39,7 @@ export default function VerifyContent() {
     if (source) {
       rememberTrafficSource(source)
       setScanned(true)
-      scanId.current = trackScan({ source, product, referrer: document.referrer })
+      scanId.current = trackScan({ source, product, referrer: document.referrer, loadId })
       scanId.current.then((id) => {
         if (id) askAgain.current = locateScan(id, setLocationHelp)
       })

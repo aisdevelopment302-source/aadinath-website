@@ -68,7 +68,13 @@ export function trackPageView(fields: {
 }
 
 /** Records a QR scan; resolves to the scan's id (null on failure) so its location can follow. */
-export async function trackScan(fields: { source: string; product: string; referrer?: string }): Promise<string | null> {
+export async function trackScan(fields: {
+  source: string
+  product: string
+  referrer?: string
+  /** the server's id for this page load (website.page_loads), so load and scan can be matched */
+  loadId?: string
+}): Promise<string | null> {
   try {
     const res = await send({ kind: 'scan', sessionId: getSessionId(), ...fields })
     if (!res.ok) return null
