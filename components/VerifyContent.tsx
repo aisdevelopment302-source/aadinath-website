@@ -13,7 +13,7 @@ import {
   type ScanQuestion,
 } from '@/lib/analytics'
 import CustomerDataForm from '@/components/CustomerDataForm'
-import ScanQuestions, { END_USES, ISSUES, labelOf, type ScanAnswers } from '@/components/ScanQuestions'
+import ScanQuestions, { ISSUES, labelOf, type ScanAnswers } from '@/components/ScanQuestions'
 
 const WHATSAPP_NUMBER = '919825207616'
 
@@ -185,8 +185,6 @@ export default function VerifyContent() {
 /** The WhatsApp message is typed out for the visitor, with what they told us. */
 function whatsAppMessage(answers: ScanAnswers): string {
   const lines = ['Hi, I scanned the QR code on an Aadinath MS Angle Bar.']
-  const use = labelOf(END_USES, answers.end_use)
-  if (use) lines.push(`I use it for: ${use}.`)
   if (answers.rating === 'bad') {
     const issue = labelOf(ISSUES, answers.issue)
     lines.push(issue ? `Quality problem: ${issue}.` : 'I have a quality problem.')

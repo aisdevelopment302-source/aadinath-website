@@ -89,7 +89,7 @@ export function trackScanLocation(
   track({ kind: 'scan_location', scanId, ...fields })
 }
 
-export type ScanQuestion = 'end_use' | 'rating' | 'issue'
+export type ScanQuestion = 'rating' | 'issue'
 
 /** A visitor's one-tap answer to a question after a scan. */
 export function trackScanAnswer(scanId: string, question: ScanQuestion, answer: string) {

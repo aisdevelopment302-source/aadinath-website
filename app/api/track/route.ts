@@ -21,7 +21,6 @@ const DEVICE_TYPES = new Set(['mobile', 'desktop'])
 const LOCATION_STATUSES = new Set(['granted', 'denied', 'unavailable', 'timeout', 'unsupported'])
 // The one-tap questions after a scan, and the answers each allows (website.scan_answers).
 const SCAN_ANSWERS: Record<string, Set<string>> = {
-  end_use: new Set(['gate_grill', 'shed_truss', 'solar_structure', 'rack_shelf', 'machine_frame', 'tower', 'resale', 'other']),
   rating: new Set(['good', 'bad']),
   issue: new Set(['straightness', 'weight', 'rust', 'size', 'other']),
 }
