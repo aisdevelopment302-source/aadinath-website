@@ -16,7 +16,7 @@
 | **GitHub Repo** | aadinath-website (private) |
 | **Firebase Project** | ais-central (projectId: ais-production-e013c) |
 | **Contact** | +91 9825207616 (WhatsApp & Phone) |
-| **Email** | info@aadinathindustries.in |
+| **Email** | aditya.jain.aadinath@gmail.com |
 | **Location** | Sihor, Bhavnagar, Gujarat |
 
 ---
@@ -319,7 +319,7 @@ See **SECURITY.md** for full details.
 ## 📞 Important Contacts
 
 - **Phone:** +91 9825207616
-- **Email:** info@aadinathindustries.in
+- **Email:** aditya.jain.aadinath@gmail.com
 - **Works Address:** Survey No. 44, Post: Vadia, Sihor Road, Bhavnagar
 - **Office Address:** A-2, Hans Complex, Sanskar Mandal, Bhavnagar, 364002
 

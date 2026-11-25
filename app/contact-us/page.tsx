@@ -41,7 +41,7 @@ export default function ContactUs() {
                 </div>
                 <div>
                   <h4 className="font-bold text-gray-800 mb-1">Email</h4>
-                  <a href="mailto:info@aadinathindustries.in" className="text-orange-600 hover:text-orange-700 font-medium">info@aadinathindustries.in</a>
+                  <a href="mailto:aditya.jain.aadinath@gmail.com" className="text-orange-600 hover:text-orange-700 font-medium">aditya.jain.aadinath@gmail.com</a>
                 </div>
               </div>
 

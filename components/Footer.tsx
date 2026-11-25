@@ -46,7 +46,7 @@ export default function Footer() {
               </li>
               <li>
                 <span className="text-orange-400 font-medium">Email:</span>{' '}
-                <a href="mailto:info@aadinathindustries.in" className="hover:text-orange-400 transition-colors">info@aadinathindustries.in</a>
+                <a href="mailto:aditya.jain.aadinath@gmail.com" className="hover:text-orange-400 transition-colors">aditya.jain.aadinath@gmail.com</a>
               </li>
               <li>
                 <span className="text-orange-400 font-medium">Works:</span>{' '}

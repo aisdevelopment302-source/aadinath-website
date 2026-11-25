@@ -15,7 +15,7 @@
 - **Company:** Aadinath Industries
 - **Phone:** +91 9825207616
 - **WhatsApp:** +919825207616
-- **Email:** info@aadinathindustries.in
+- **Email:** aditya.jain.aadinath@gmail.com
 - **Works Address:** Survey No. 44, Post: Vadia, Sihor Road, Vadia, Dist. Bhavnagar
 - **Office Address:** A-2, Hans Complex, Sanskar Mandal, Bhavnagar, 364002
 
@@ -78,7 +78,7 @@
 - Two-column layout:
   - **Left:** Contact details
     - Phone: +91 9825207616
-    - Email: info@aadinathindustries.in
+    - Email: aditya.jain.aadinath@gmail.com
     - Works: Survey No. 44, Post: Vadia, Sihor Road, Vadia, Dist. Bhavnagar
     - Office: A-2, Hans Complex, Sanskar Mandal, Bhavnagar, 364002
   - **Right:** Embedded Google Map (iframe) for Bhavnagar location OR a simple "Find Us" card with address
