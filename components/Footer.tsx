@@ -64,7 +64,7 @@ export default function Footer() {
       {/* Bottom Bar */}
       <div className="border-t border-gray-800">
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-gray-500">
-          <span>© 2024 Aadinath Industries. All Rights Reserved.</span>
+          <span>© 2024 Aadinath Industries. All Rights Reserved. Subject to Bhavnagar jurisdiction.</span>
           <span>Pioneering Excellence in Every Element</span>
         </div>
       </div>
